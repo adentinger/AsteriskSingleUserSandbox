@@ -14,4 +14,4 @@ rsync -Pruz "${ASTERISK_DIR}"/* "${INSTALL_ASTERISK_DIR}"
 chown -R asterisk "${INSTALL_ASTERISK_DIR}"
 chgrp -R asterisk "${INSTALL_ASTERISK_DIR}"
 
-echo $'sip reload\ndialplan reload\nexit' | asterisk -vvvvvvr
+echo $'core reload\nexit' | asterisk -vvvvvvr
