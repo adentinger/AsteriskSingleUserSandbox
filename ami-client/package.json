@@ -1,0 +1,25 @@
+{
+  "name": "asterisk-ami-client",
+  "version": "1.0.0",
+  "description": "Client for the AMI server running on my Asterisk server",
+  "main": "index.ts",
+  "scripts": {
+    "start": "nodemon",
+    "bstart": "npm run build && node build/index.js",
+    "build": "rimraf ./build && tsc"
+  },
+  "author": "Anthony Dentinger",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^13.7.6",
+    "nodemon": "^2.0.2",
+    "npx": "^10.2.2",
+    "rimraf": "^3.0.2",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.2"
+  },
+  "dependencies": {
+    "asterisk-manager": "^0.1.16",
+    "child_process": "^1.0.2"
+  }
+}
