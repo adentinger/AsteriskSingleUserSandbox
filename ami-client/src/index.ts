@@ -2,6 +2,7 @@ import { AmiEventHandler } from "./AmiEventHandler";
 
 import amiGen, { DeviceState } from "asterisk-manager";
 import { DeviceStateChangeEventParser } from "./DeviceStateChangeEventParser";
+import { UserEventParser, SMS_RECEIVED_STRING, SmsReceivedUserEvent } from "./UserEventParser";
 
 const ami = amiGen(
     "5038",
@@ -16,9 +17,28 @@ const handler = new AmiEventHandler();
 ami.on(
     "devicestatechange",
     (e) => {
-        handler.onDeviceStateChange(
-            DeviceStateChangeEventParser.parseDeviceStateChangeEvent(e)
-        );
+        try {
+            handler.onDeviceStateChange(
+                DeviceStateChangeEventParser.parseDeviceStateChangeEvent(e)
+            );
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }
+);
+ami.on(
+    "userevent",
+    (e) => {
+        try {
+            const parsed = UserEventParser.parse(e);
+            if (parsed.type === SMS_RECEIVED_STRING) {
+                handler.onSmsReceived(parsed as SmsReceivedUserEvent);
+            }
+        }
+        catch (e) {
+            console.error(e);
+        }
     }
 );
 

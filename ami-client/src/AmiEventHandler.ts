@@ -1,6 +1,7 @@
 import { spawnSync } from "child_process";
 import { DeviceState } from "./DeviceState";
 import { DeviceStateChangeEvent } from "./DeviceStateChangeEvent";
+import { SmsReceivedUserEvent } from "./UserEventParser";
 
 export class AmiEventHandler {
     protected readonly deviceStates: Map<string, DeviceState> = new Map();
@@ -22,7 +23,11 @@ export class AmiEventHandler {
         }
     }
 
-    protected onConnect(e: DeviceStateChangeEvent) {
+    public onSmsReceived(e: SmsReceivedUserEvent): void {
+        console.log("TODO", e);
+    }
+
+    protected onConnect(e: DeviceStateChangeEvent): void {
         console.log(`Device ${e.state.getAmiDeviceString()} is connecting (${e.state.value})`);
     }
 
