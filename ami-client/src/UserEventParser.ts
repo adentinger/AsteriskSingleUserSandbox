@@ -1,6 +1,7 @@
 import { UserEvent as AmiUserEvent } from "asterisk-manager";
 import { Device } from "./Device";
 import { Caller } from "./Dialplan";
+import { SmsFile } from "./SmsFile";
 
 export const SMS_RECEIVED_STRING = "SmsReceived";
 export type UserEventTypeString = "SmsReceived";
@@ -18,7 +19,11 @@ export interface SmsReceivedUserEvent extends GenericUserEvent {
      * List of devices that received the SMS.
      */
     smsReceivedBy: Device[];
-    body: string;
+    /**
+     * File the SMS message is saved in.
+     * This file is in /var/spool/asterisk/sms/<destination exten> .
+     */
+    file: SmsFile;
 }
 
 export class UserEventParser {
@@ -42,27 +47,8 @@ export class UserEventParser {
 
     protected static parseSmsReceived(e: AmiUserEvent): SmsReceivedUserEvent {
         const srue = this.parseGeneric(e) as SmsReceivedUserEvent;
-
-        // Have to specify device having received the SMS into
-        // comma-seperated stringification, otherwise the AMI
-        // framework overrides the header arguments by the last one
-        // if it is specified multiple times.
-        //
-        // Note that this is vulnerable to injection if a device name
-        // contains a comma.
-        if ((e as any).receivedby) {
-            const headerValue = (e as any).receivedby as string;
-            const deviceStringsMatches = headerValue.match(/[^,]+/g);
-            if (deviceStringsMatches) {
-                srue.smsReceivedBy = deviceStringsMatches.map(ds => new Device(ds));
-            }
-        }
-
-        if (!srue.smsReceivedBy) {
-            srue.smsReceivedBy = [];
-        }
-
-        srue.body = (e as any).body || "";
+        srue.file = new SmsFile((e as any).file, (e as any).extento);
+        srue.smsReceivedBy = srue.file.receivedBy;
         return srue;
     }
 }
