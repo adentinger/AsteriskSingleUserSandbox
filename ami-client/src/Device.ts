@@ -15,6 +15,10 @@ export class Device {
         return `${this.chan}/${this.endpoint}`;
     }
 
+    public equals(that: Device): boolean {
+        return this.getDeviceString() === that.getDeviceString();
+    }
+
     protected parseDeviceString(ds: string): {chan: Chan, endpoint: string} {
         const chanMatches = ds.match(/^(?:PJSIP|SIP)(?=\/)/);
         if (!chanMatches) {
