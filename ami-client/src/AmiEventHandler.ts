@@ -2,11 +2,15 @@ import { spawnSync } from "child_process";
 import { DeviceState } from "./DeviceState";
 import { DeviceStateChangeEvent } from "./DeviceStateChangeEvent";
 import { SmsReceivedUserEvent } from "./UserEventParser";
+import { PendingSmsMessages } from "./PendingSmsMessages";
 
 export class AmiEventHandler {
     protected readonly deviceStates: Map<string, DeviceState> = new Map();
+    protected readonly pendingMessages: PendingSmsMessages;
 
-    public constructor() { }
+    public constructor() {
+        this.pendingMessages = new PendingSmsMessages();
+    }
 
     public onDeviceStateChange(e: DeviceStateChangeEvent) {
         const existingDs = this.deviceStates.get(e.state.getAmiDeviceString());
@@ -24,7 +28,7 @@ export class AmiEventHandler {
     }
 
     public onSmsReceived(e: SmsReceivedUserEvent): void {
-        console.log("TODO", e);
+        this.pendingMessages.add(e.file);
     }
 
     protected onConnect(e: DeviceStateChangeEvent): void {

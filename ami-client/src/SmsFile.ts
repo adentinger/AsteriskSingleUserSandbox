@@ -13,10 +13,16 @@ export class SmsFile {
     protected static readonly RECEIVED_BY_FIELD = "-r";
     protected static readonly BODY_FIELD = "-b";
 
-    protected file: string;
+    public readonly abspath: string;
 
-    public constructor(fileBasename: string, exten: number) {
-        this.file = `${SmsFile.SMS_FILE_DIR}/${exten}/${fileBasename}`;
+    public constructor(filePath: string, exten: number = -1) {
+        if (exten === -1) {
+            // Assume absolute file path.
+            this.abspath = filePath;
+        }
+        else {
+            this.abspath = `${SmsFile.SMS_FILE_DIR}/${exten}/${filePath}`;
+        }
     }
 
     public get extenTo(): string {
@@ -68,11 +74,20 @@ export class SmsFile {
         this.writeField(SmsFile.BODY_FIELD, value);
     }
 
-    protected readField(arg: string): string {
-        const cmd = spawnSync(SmsFile.SMS_FILE_READ_SCRIPT, [this.file, arg], {encoding: "utf8"});
+    public delete(): void {
+        const cmd = spawnSync("rm", [this.abspath], {encoding: "utf8"});
         if (cmd.stderr !== "") {
             throw new Error(
-                `Could not run ${SmsFile.SMS_FILE_READ_SCRIPT} ${this.file} ${arg}:\n${cmd.stderr}`
+                `Could not run rm ${this.abspath}:\n${cmd.stderr}`
+            );
+        }
+    }
+
+    protected readField(arg: string): string {
+        const cmd = spawnSync(SmsFile.SMS_FILE_READ_SCRIPT, [this.abspath, arg], {encoding: "utf8"});
+        if (cmd.stderr !== "") {
+            throw new Error(
+                `Could not run ${SmsFile.SMS_FILE_READ_SCRIPT} ${this.abspath} ${arg}:\n${cmd.stderr}`
             );
         }
         return cmd.stdout;
@@ -81,13 +96,13 @@ export class SmsFile {
     protected writeField(arg: string, value: string): void {
         const cmd = spawnSync(
             SmsFile.SMS_FILE_READ_SCRIPT,
-            [this.file, SmsFile.SET_ARG, arg, value],
+            [this.abspath, SmsFile.SET_ARG, arg, value],
             {encoding: "utf8"}
         );
         if (cmd.stderr !== "") {
             throw new Error(
                 `Could not run ${SmsFile.SMS_FILE_READ_SCRIPT} ` +
-                `${this.file} ${SmsFile.SET_ARG} ${arg} ${value}:\n${cmd.stderr}`
+                `${this.abspath} ${SmsFile.SET_ARG} ${arg} ${value}:\n${cmd.stderr}`
             );
         }
     }
