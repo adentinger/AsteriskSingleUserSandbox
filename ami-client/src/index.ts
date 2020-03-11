@@ -42,6 +42,9 @@ ami.on(
     }
 );
 
+ami.on("endpointlist", (e) => console.log("ON ENDPOINTLIST", e));
+ami.on("endpointlistcomplete", (e) => console.log("ON ENDPOINTLIST COMPLETE", e));
+
 // Display message confirming when we are connected to the AMI.
 let intervalId: NodeJS.Timeout;
 const checkIfConnected = () => {
@@ -51,3 +54,5 @@ const checkIfConnected = () => {
     }
 };
 intervalId = setInterval(checkIfConnected, 1000);
+
+ami.action({action: "PJSIPShowEndpoints"});
