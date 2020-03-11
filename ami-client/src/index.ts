@@ -3,6 +3,7 @@ import { AmiEventHandler } from "./AmiEventHandler";
 import amiGen, { DeviceState } from "asterisk-manager";
 import { DeviceStateChangeEventParser } from "./DeviceStateChangeEventParser";
 import { UserEventParser, SMS_RECEIVED_STRING, SmsReceivedUserEvent } from "./UserEventParser";
+import { AmiActionSender } from "./AmiActionSender";
 
 const ami = amiGen(
     "5038",
@@ -42,9 +43,6 @@ ami.on(
     }
 );
 
-ami.on("endpointlist", (e) => console.log("ON ENDPOINTLIST", e));
-ami.on("endpointlistcomplete", (e) => console.log("ON ENDPOINTLIST COMPLETE", e));
-
 // Display message confirming when we are connected to the AMI.
 let intervalId: NodeJS.Timeout;
 const checkIfConnected = () => {
@@ -55,4 +53,4 @@ const checkIfConnected = () => {
 };
 intervalId = setInterval(checkIfConnected, 1000);
 
-ami.action({action: "PJSIPShowEndpoints"});
+new AmiActionSender(ami).listEndpoints().then(endpoints => console.log(endpoints));
