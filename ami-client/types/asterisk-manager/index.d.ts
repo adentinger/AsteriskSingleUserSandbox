@@ -7,6 +7,9 @@ export class ManagerInstance {
     on(event: "contactstatus", callback: (e: ContactStatusEvent) => void): void;
     on(event: "devicestatechange", callback: (e: DeviceStateChangeEvent) => void): void;
     on(event: "userevent", callback: (e: UserEvent) => void): void;
+    on(event: "endpointlist", callback: (err: string, e: EndpointList) => void): void;
+
+    action(act: Action, callback?: (err: any, res: ActionResponse) => void): void;
 
     keepConnected(): void;
     connect(): void;
@@ -15,10 +18,10 @@ export class ManagerInstance {
 
 export interface Event {
     event: string;
-    privilege: string;
 }
 
 export interface ContactStatusEvent extends Event {
+    privilege: string;
     uri: string;
     contactstatus: string;
     aor: string;
@@ -31,8 +34,23 @@ export type DeviceState =
     "UNAVAILABLE" | "RINGING" | "RINGINUSE" | "ONHOLD";
 
 export interface DeviceStateChangeEvent extends Event {
+    privilege: string;
     device: string;
     state: DeviceState;
+}
+
+export interface EndpointList extends Event {
+    event: "EndpointList",
+    actionid: string,
+    objecttype: "endpoint",
+    objectname: string,
+    transport: string,
+    aor: string,
+    auths: string,
+    outboundauths: string,
+    contacts: string,
+    devicestate: DeviceState,
+    activechannels: string
 }
 
 export interface UserEvent extends Event {
@@ -51,6 +69,16 @@ export interface UserEvent extends Event {
     uniqueid: string,
     linkedid: string,
     userevent: string,
+}
+
+export interface Action {
+    action: string;
+}
+
+export interface ActionResponse {
+    response: string;
+    actionid: string;
+    message: string;
 }
 
 export default Manager;
