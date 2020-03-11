@@ -7,7 +7,8 @@ export class ManagerInstance {
     on(event: "contactstatus", callback: (e: ContactStatusEvent) => void): void;
     on(event: "devicestatechange", callback: (e: DeviceStateChangeEvent) => void): void;
     on(event: "userevent", callback: (e: UserEvent) => void): void;
-    on(event: "endpointlist", callback: (err: string, e: EndpointList) => void): void;
+    on(event: "endpointlist", callback: (e: EndpointList) => void): void;
+    on(event: "endpointlistcomplete", callback: (e: EndpointListComplete) => void): void;
 
     action(act: Action, callback?: (err: any, res: ActionResponse) => void): void;
 
@@ -51,6 +52,13 @@ export interface EndpointList extends Event {
     contacts: string,
     devicestate: DeviceState,
     activechannels: string
+}
+
+export interface EndpointListComplete extends Event {
+    event: "EndpointListComplete";
+    actionid: string;
+    eventlist: string;
+    listitems: string;
 }
 
 export interface UserEvent extends Event {
