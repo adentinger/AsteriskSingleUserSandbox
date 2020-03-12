@@ -9,7 +9,7 @@ export interface PjsipEndpointInfo {
 
 type ListResolveType = (value?: PjsipEndpointInfo[] | PromiseLike<PjsipEndpointInfo[]> | undefined) => void;
 
-export class AmiActionSender {
+export class AmiListEndpointsAction {
 
     protected pendingListPromise: Promise<PjsipEndpointInfo[]> | null = null;
     protected markPendingListResolved: ListResolveType | null = null;
