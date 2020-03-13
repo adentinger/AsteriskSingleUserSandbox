@@ -28,11 +28,18 @@ export class AmiEventHandler {
     }
 
     public onSmsReceived(e: SmsReceivedUserEvent): void {
-        this.pendingMessages.add(e.file);
+        this.pendingMessages.updateSmsStatus(e.file);
     }
 
     protected onConnect(e: DeviceStateChangeEvent): void {
         console.log(`Device ${e.state.getAmiDeviceString()} is connecting (${e.state.value})`);
+        const pendingSmsForDevice = this.pendingMessages.getNotReceivedBy(e.state.device);
+        pendingSmsForDevice.forEach(sms => {
+            console.log("Sending", sms.abspath, "to", e.state.device.getDeviceString());
+            // TODO Actually send the SMS message. If the message was sent
+            // successfully, update the receivedBy field of the SMS file.
+            this.pendingMessages.updateSmsStatus(sms);
+        });
     }
 
     protected onDisconnect(e: DeviceStateChangeEvent) {
