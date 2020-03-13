@@ -5,7 +5,7 @@ import { Device } from "./Device";
 
 export class PendingSmsMessages {
     /**
-     * List of pending SmsFile. Key is the absolute path to the file.
+     * List of pending SmsFiles. Key is the absolute path to the file.
      */
     protected readonly pendingByFilename: Map<string, SmsFile> = new Map();
     /**
@@ -18,14 +18,25 @@ export class PendingSmsMessages {
         SmsFiles
             .loadSmsFiles()
             .forEach(smsFile => {
-                this.scheduleSmsReceptionInternal(smsFile);
+                this.scheduleSmsReception(smsFile);
             });
     }
 
-    public scheduleSmsReception(sms: SmsFile): void {
-        this.scheduleSmsReceptionInternal(sms);
+    /**
+     * Reads the SMS file and does whatever is appropriate with it:
+     * add it to the list of pending messages if it didn't exist,
+     * update it if it did, or remove and delete it if it was
+     * received by all devices.
+     * @param sms The SMS file to take the modifications of into account.
+     */
+    public updateSmsStatus(sms: SmsFile): void {
+        this.scheduleSmsReception(sms);
     }
 
+    /**
+     * Gets the set of all messages not received by given device.
+     * @param device The device to get the messages not received by.
+     */
     public getNotReceivedBy(device: Device): Set<SmsFile> {
         const absPathSet = this.pendingByDevice.get(device.getDeviceString()) || new Set();
         const notReceivedList = new Set<SmsFile>();
@@ -35,7 +46,7 @@ export class PendingSmsMessages {
 
     /**
      * Unschedules the transmission of the SMS file, and also deletes it
-     * from the disk. Ideally, this
+     * from the disk.
      * @param sms The SMS file to remove.
      */
     protected remove(sms: SmsFile): void {
@@ -44,25 +55,31 @@ export class PendingSmsMessages {
         sms.delete();
     }
 
-    protected scheduleSmsReceptionInternal(smsFile: SmsFile): void {
-        const receivedByAll = Pjsip.DEVICES.every(dev1 => smsFile.receivedBy.some(dev2 => dev1.equals(dev2)));
-        if (receivedByAll) {
-            console.log("SMS", smsFile, "received by all. Deleting.");
+    protected scheduleSmsReception(sms: SmsFile): void {
+        if (sms.wasReceivedByAll()) {
+            if (this.pendingByFilename.has(sms.abspath)) {
+                console.log("New SMS", sms.abspath, "received by all. Deleting.");
+            }
+            else {
+                console.log("Updated SMS", sms.abspath, "received by all. Deleting.");
+            }
             // Delete from this object in case we already had the SMS file in our list.
-            this.remove(smsFile);
+            this.remove(sms);
         }
         else {
-            console.log("SMS", smsFile.abspath, "not received by all. Keeping.");
-            this.pendingByFilename.set(smsFile.abspath, smsFile);
-            const notReceivedBy = Pjsip.DEVICES.filter(
-                device => !smsFile.receivedBy.some(receiver => device.equals(receiver))
-            );
-            notReceivedBy.forEach(device => {
+            if (this.pendingByFilename.has(sms.abspath)) {
+                console.log("New SMS", sms.abspath, "not received by all. Keeping.");
+            }
+            else {
+                console.log("Updated SMS", sms.abspath, "not received by all. Keeping.");
+            }
+            this.pendingByFilename.set(sms.abspath, sms);
+            sms.getNotReceivedBy().forEach(device => {
                 // Create the SmsFile set for this device if it does not exist.
                 if (!this.pendingByDevice.has(device.getDeviceString())) {
                     this.pendingByDevice.set(device.getDeviceString(), new Set());
                 }
-                this.pendingByDevice.get(device.getDeviceString())?.add(smsFile.abspath);
+                this.pendingByDevice.get(device.getDeviceString())?.add(sms.abspath);
             });
         }
     }

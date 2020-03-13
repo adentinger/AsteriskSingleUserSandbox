@@ -1,6 +1,7 @@
 import { Caller } from "./Dialplan";
 import { Device } from "./Device";
 import { spawnSync } from "child_process";
+import { Pjsip } from "./Pjsip";
 
 export class SmsFile {
     public static readonly SMS_FILE_DIR = "/var/spool/asterisk/sms";
@@ -81,6 +82,20 @@ export class SmsFile {
                 `Could not run rm ${this.abspath}:\n${cmd.stderr}`
             );
         }
+    }
+
+    public wasReceivedByAll(): boolean {
+        const receivedByAll = Pjsip.DEVICES.every(dev1 => this.receivedBy.some(dev2 => dev1.equals(dev2)));
+        return receivedByAll;
+    }
+
+    public getNotReceivedBy(): Set<Device> {
+        const arrayNotReceivedBy = Pjsip.DEVICES.filter(
+            device => !this.receivedBy.some(receiver => device.equals(receiver))
+        );
+        const setNotReceivedBy = new Set<Device>();
+        arrayNotReceivedBy.forEach(device => setNotReceivedBy.add(device));
+        return setNotReceivedBy;
     }
 
     protected readField(arg: string): string {
