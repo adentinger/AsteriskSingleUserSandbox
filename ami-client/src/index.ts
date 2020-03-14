@@ -1,10 +1,11 @@
 import { AmiEventHandler } from "./AmiEventHandler";
 
-import amiGen, { DeviceState } from "asterisk-manager";
+import amiGen, { DeviceState, Action } from "asterisk-manager";
 import { DeviceStateChangeEventParser } from "./DeviceStateChangeEventParser";
 import { UserEventParser, SMS_RECEIVED_STRING, SmsReceivedUserEvent } from "./UserEventParser";
 import { AmiListEndpointsAction } from "./AmiListEndpointsAction";
 import { DeviceStateChangeEvent } from "./DeviceStateChangeEvent";
+import { AmiMessageSendAction } from "./AmiMessageSendAction";
 
 const ami = amiGen(
     "5038",
@@ -50,13 +51,16 @@ const checkIfConnected = () => {
     if (ami.isConnected()) {
         console.log("Connected to AMI.");
         clearInterval(intervalId);
+        handler.setAmiInstance(ami);
+
         new AmiListEndpointsAction(ami).listEndpoints()
             .then(endpoints => {
                 endpoints.forEach(endpoint => {
                     const event: DeviceStateChangeEvent = {state: endpoint.devicestate};
                     handler.onDeviceStateChange(event);
                 });
-            });
+            })
+            .catch((err) => console.error(err));
     }
 };
 intervalId = setInterval(checkIfConnected, 1000);

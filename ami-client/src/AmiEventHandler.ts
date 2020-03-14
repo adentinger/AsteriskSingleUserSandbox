@@ -3,13 +3,27 @@ import { DeviceState } from "./DeviceState";
 import { DeviceStateChangeEvent } from "./DeviceStateChangeEvent";
 import { SmsReceivedUserEvent } from "./UserEventParser";
 import { PendingSmsMessages } from "./PendingSmsMessages";
+import { AmiMessageSendAction } from "./AmiMessageSendAction";
+import { ManagerInstance } from "asterisk-manager";
 
 export class AmiEventHandler {
     protected readonly deviceStates: Map<string, DeviceState> = new Map();
     protected readonly pendingMessages: PendingSmsMessages;
+    protected messageSender!: AmiMessageSendAction;
+    protected isAmiInstanceSet: boolean = false;
 
     public constructor() {
         this.pendingMessages = new PendingSmsMessages();
+    }
+
+    public setAmiInstance(ami: ManagerInstance): void {
+        if (!this.messageSender) {
+            this.messageSender = new AmiMessageSendAction(ami);
+            this.isAmiInstanceSet = true;
+        }
+        else {
+            throw new Error(`Cannot ${this.setAmiInstance.name}() a second time.`);
+        }
     }
 
     public onDeviceStateChange(e: DeviceStateChangeEvent) {
@@ -32,17 +46,31 @@ export class AmiEventHandler {
     }
 
     protected onConnect(e: DeviceStateChangeEvent): void {
+        this.assertAmiInstanceIsSet();
+
         console.log(`Device ${e.state.getAmiDeviceString()} is connecting (${e.state.value})`);
         const pendingSmsForDevice = this.pendingMessages.getNotReceivedBy(e.state.device);
         pendingSmsForDevice.forEach(sms => {
             console.log("Sending", sms.abspath, "to", e.state.device.getDeviceString());
-            // TODO Actually send the SMS message. If the message was sent
-            // successfully, update the receivedBy field of the SMS file.
-            this.pendingMessages.updateSmsStatus(sms);
+            this.messageSender.messageSend(e.state.device, sms)
+                .then(() => {
+                    const receivedBy = sms.receivedBy;
+                    receivedBy.push(e.state.device);
+                    sms.receivedBy = receivedBy;
+                })
+                .catch(err => {
+                    console.error(`Could not send SMS ${sms.abspath} to ${e.state.device.getDeviceString()}: `, err);
+                });
         });
     }
 
     protected onDisconnect(e: DeviceStateChangeEvent) {
         console.log(`Device ${e.state.getAmiDeviceString()} is disconnecting (${e.state.value})`);
+    }
+
+    protected assertAmiInstanceIsSet(): void {
+        if (!this.isAmiInstanceSet) {
+            throw new Error(`Ami instance is not set (not connected to AMI yet?)`);
+        }
     }
 }
