@@ -11,6 +11,7 @@ export class ManagerInstance {
     on(event: "endpointlistcomplete", callback: (e: EndpointListComplete) => void): void;
 
     action(act: Action, callback?: (err: any, res: ActionResponse) => void): void;
+    action(act: MessageSendAction, callback?: (err: any, res: ActionResponse) => void): void;
 
     keepConnected(): void;
     connect(): void;
@@ -81,7 +82,25 @@ export interface UserEvent extends Event {
 
 export interface Action {
     action: string;
+    actionid?: string;
 }
+
+interface MessageSendActionBase extends Action {
+    action: "messagesend";
+    to: string;
+    from: string;
+    variable?: string;
+}
+
+export interface MessageSendActionStringEncoding extends MessageSendActionBase {
+    body: string;
+}
+
+export interface MessageSendActionBase64Encoding extends MessageSendActionBase {
+    base64body: string;
+}
+
+type MessageSendAction = MessageSendActionStringEncoding | MessageSendActionBase64Encoding;
 
 export interface ActionResponse {
     response: string;
