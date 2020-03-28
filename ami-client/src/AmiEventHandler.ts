@@ -1,12 +1,17 @@
-import { spawnSync } from "child_process";
 import { DeviceState } from "./DeviceState";
 import { DeviceStateChangeEvent } from "./DeviceStateChangeEvent";
 import { SmsReceivedUserEvent } from "./UserEventParser";
 import { PendingSmsMessages } from "./PendingSmsMessages";
 import { AmiMessageSendAction } from "./AmiMessageSendAction";
 import { ManagerInstance } from "asterisk-manager";
+import { Device } from "./Device";
+import { SmsFile } from "./SmsFile";
+import { Util } from "./Util";
 
 export class AmiEventHandler {
+
+    public static readonly TRANSMISSION_DELAY_MS = 2000;
+
     protected readonly deviceStates: Map<string, DeviceState> = new Map();
     protected readonly pendingMessages: PendingSmsMessages;
     protected messageSender!: AmiMessageSendAction;
@@ -48,24 +53,40 @@ export class AmiEventHandler {
     protected onConnect(e: DeviceStateChangeEvent): void {
         this.assertAmiInstanceIsSet();
 
-        console.log(`Device ${e.state.getAmiDeviceString()} is connecting (${e.state.value})`);
+        console.log(`Device ${e.state.getAmiDeviceString()} is connected (${e.state.value})`);
         const pendingSmsForDevice = this.pendingMessages.getNotReceivedBy(e.state.device);
-        pendingSmsForDevice.forEach(sms => {
-            console.log("Sending", sms.abspath, "to", e.state.device.getDeviceString());
-            this.messageSender.messageSend(e.state.device, sms)
-                .then(() => {
-                    const receivedBy = sms.receivedBy;
-                    receivedBy.push(e.state.device);
-                    sms.receivedBy = receivedBy;
-                })
-                .catch(err => {
-                    console.error(`Could not send SMS ${sms.abspath} to ${e.state.device.getDeviceString()}: `, err);
-                });
-        });
+        this.sendMessages(e.state.device, pendingSmsForDevice);
     }
 
     protected onDisconnect(e: DeviceStateChangeEvent) {
-        console.log(`Device ${e.state.getAmiDeviceString()} is disconnecting (${e.state.value})`);
+        console.log(`Device ${e.state.getAmiDeviceString()} is disconnected (${e.state.value})`);
+    }
+
+    /**
+     * Sends a list of messages to a device, wating for each message
+     * to be correctly received before sending the next.
+     * @param to The device to send the SMS to.
+     * @param messages The list of messages to send.
+     */
+    protected async sendMessages(to: Device, messages: SmsFile[]): Promise<void> {
+        for (let i = 0; i < messages.length; ++i) {
+            const sms = messages[i];
+            console.log(
+                "Sending", sms.abspath, "to", to.getDeviceString(), "; body:", sms.body,
+                "; timestamp:", sms.date
+            );
+            // This throws an error if the message was not received correctly.
+            await this.messageSender.messageSend(to, sms);
+
+            // Wait a moment before sending the next message ; some
+            // clients (e.g. Zoiper :S) do not seem to handle receiving
+            // text messsages rapidly very well.
+            await Util.delay(AmiEventHandler.TRANSMISSION_DELAY_MS);
+
+            const receivedBy = sms.receivedBy;
+            receivedBy.push(to);
+            sms.receivedBy = receivedBy;
+        }
     }
 
     protected assertAmiInstanceIsSet(): void {

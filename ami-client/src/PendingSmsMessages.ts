@@ -1,5 +1,4 @@
 import { SmsFile } from "./SmsFile";
-import { Pjsip } from "./Pjsip";
 import { SmsFiles } from "./SmsFiles";
 import { Device } from "./Device";
 
@@ -34,13 +33,19 @@ export class PendingSmsMessages {
     }
 
     /**
-     * Gets the set of all messages not received by given device.
+     * Gets an array of all messages not received by given device, sorted
+     * from oldest nonreceived to newest nonreceived.
      * @param device The device to get the messages not received by.
      */
-    public getNotReceivedBy(device: Device): Set<SmsFile> {
+    public getNotReceivedBy(device: Device): SmsFile[] {
         const absPathSet = this.pendingByDevice.get(device.getDeviceString()) || new Set();
-        const notReceivedList = new Set<SmsFile>();
-        absPathSet.forEach(smsAbsPath => notReceivedList.add(new SmsFile(smsAbsPath)));
+        const notReceivedList: SmsFile[] = [];
+        absPathSet.forEach(smsAbsPath => notReceivedList.push(new SmsFile(smsAbsPath)));
+        notReceivedList.sort((a, b) => {
+            const dateA = a.date;
+            const dateB = b.date;
+            return dateA.getTime() - dateB.getTime();
+        });
         return notReceivedList;
     }
 
