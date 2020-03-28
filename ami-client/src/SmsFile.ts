@@ -12,6 +12,7 @@ export class SmsFile {
     protected static readonly CALLERID_NAME_FIELD = "-n";
     protected static readonly CALLERID_NUM_FIELD = "-u";
     protected static readonly RECEIVED_BY_FIELD = "-r";
+    protected static readonly DATE_FIELD = "-d";
     protected static readonly BODY_FIELD = "-b";
 
     public readonly abspath: string;
@@ -65,6 +66,22 @@ export class SmsFile {
             SmsFile.RECEIVED_BY_FIELD,
             value.map(dev => dev.getDeviceString()).join(",")
         );
+    }
+
+    public get date(): Date {
+        const dateString = this.readField(SmsFile.DATE_FIELD);
+        const dateNum = Number.parseInt(dateString);
+        if (Number.isNaN(dateNum)) {
+            throw new Error(`"${dateString}" cannot be interpreted as an integer.`);
+        }
+        return new Date(dateNum / 1e6);
+    }
+
+    public set date(d: Date) {
+        // Concat rather than multiply just to be sure
+        // we don't have trimming due to floating-point
+        // precision.
+        const dateString = String(d.getTime()) + "000000";
     }
 
     public get body(): string {
