@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+updateMusicOnHold() {
+    message 'Updating music on hold.'
+    deleteAndSyncDirectory "${MOH_DIR}" "${MOH_INSTALL_DIR}"
+}
