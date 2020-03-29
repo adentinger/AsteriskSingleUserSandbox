@@ -1,0 +1,77 @@
+#!/bin/bash -e
+
+# Save THIS_SCRIPT_DIR.
+OLD_THIS_SCRIPT_DIR="${THIS_SCRIPT_DIR}"
+
+THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GIT_ROOT_DIR="$(realpath "${THIS_SCRIPT_DIR}/..")"
+SCRIPTS_DIR="${GIT_ROOT_DIR}/scripts"
+ASTERISK_CONFIG_DIR="${GIT_ROOT_DIR}/asterisk"
+ASTERISK_CONFIG_INSTALL_DIR=/etc/asterisk
+DATA_DIR="${GIT_ROOT_DIR}/data"
+MOH_DIR="${DATA_DIR}/music-on-hold"
+MOH_INSTALL_DIR=/usr/share/asterisk/moh
+SYSTEMD_DIR="${GIT_ROOT}/systemd"
+SYSTEMD_UNITS_DIR="${SYSTEMD_DIR}/units"
+SYSTEMD_UNITS_INSTALL_DIR=/etc/systemd/system
+
+# Restore THIS_SCRIPT_DIR to what it was before.
+THIS_SCRIPT_DIR="${OLD_THIS_SCRIPT_DIR}"
+
+isTty() {
+    local fd="${1}"
+    [ -t "${fd}" ]
+}
+
+message() {
+    if isTty 1; then
+        echo -n -e '\e[1;92m'
+        echo "$@"
+        echo -n -e '\e[0m'
+    else
+        echo "$@"
+    fi
+}
+
+messageError() {
+    if isTty 2; then
+        echo -n -e '\e[1;91m'
+        echo "$@" >&2
+        echo -n -e '\e[0m'
+    else
+        echo "$@" >&2
+    fi
+    false
+}
+
+assertRoot() {
+    if [ "$(whoami)" != root ]; then
+        messageError 'Must be root to do this.'
+        exit 1
+    fi
+}
+
+deleteAndSyncDirectory() {
+    local srcDir="${1}"
+    # Append "/" to srcDir if there isn't one already.
+    if ! echo "${srcDir}" | grep -qP '/$'; then
+        srcDir="${srcDir}/"
+    fi
+    local dstDir="${2}"
+
+    rsync -Pruz --delete-after "${srcDir}" "${dstDir}"
+}
+
+changeOwnershipAndModes() {
+    local dir="${1}"
+    local usr="${2}"
+    if [ $# -gt 3 ]; then
+        local grp="${3}"
+    else
+        local grp="${usr}"
+    fi
+
+    chmod -R 640 "${dir}"
+    chown -R "${usr}" "${dir}"
+    chgrp -R "${grp}" "${dir}"
+}
