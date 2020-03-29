@@ -8,74 +8,7 @@ updateAsteriskConfig() {
     # dir in an invalid state.
     local tmpInstallDir="$(mktemp -d)"
     deleteAndSyncDirectory "${ASTERISK_CONFIG_DIR}" "${tmpInstallDir}"
-    parseVariableConfigFile
     doTemplateReplacement "${tmpInstallDir}"
-    changeOwnershipAndModes "${tmpInstallDir}"
+    changeOwnershipAndModes "${tmpInstallDir}" asterisk
     deleteAndSyncDirectory "${tmpInstallDir}" "${ASTERISK_CONFIG_INSTALL_DIR}"
-}
-
-parseVariableConfigFile() {
-    local invalidLines="$(grep -oP '^.+$' "${VAR_CONFIG_FILE}" | grep -qP '^[^=]*$|^=')"
-    if [ "${invalidLines}" != "" ]; then
-        messageError "Invalid lines in \"${VAR_CONFIG_FILE}\":"$'\n'"${invalidLines}"
-        usage
-        exit 1
-    fi
-
-    local oldIfs="${IFS}"
-    local IFS=$'\n'
-    local lines=($(grep -oP '^.*?=.*?$' "${VAR_CONFIG_FILE}"))
-    local IFS="${oldIfs}"
-
-    local linePcre='^(?<var>.*?)=(?<value>.*)$'
-    local line
-    for line in "${lines[@]}"; do
-        local var="$(echo "${line}" | perl -p0e "s~${linePcre}~$+{var}~g")"
-        local value="$(echo "${line}" | perl -p0e "s~${linePcre}~$+{value}~g")"
-
-        # Since we're going to use eval, escape the value
-        # characters to avoid surprising results or injection.
-        local valueEscaped="$(printf '%q' "${value}")"
-        eval "${var}"="${valueEscaped}"
-    done
-}
-
-doTemplateReplacement() {
-    local confDir="${1}"
-
-    local templateVars=(
-        CALLER_NAME
-        DIAL_TIME_SEC
-        DID_NUMBER
-        DOMAIN_NAME
-        ENDPOINT1_PASSWORD
-        ENDPOINT2_PASSWORD
-        ENDPOINT3_PASSWORD
-        ENDPOINT4_PASSWORD
-        ENDPOINT5_PASSWORD
-        ENDPOINT_QUALIFY_FREQUENCY
-        EXTENSION_LIST
-        MAIN_EXTEN
-        MANAGER_PASSWORD
-        MANAGER_USERNAME
-        VOIPMS_ACCOUNT_ID
-        VOIPMS_PASSWORD
-        VOIPMS_SERVER
-        VOIPMS_SERVER_PORT
-        VOIPMS_USERNAME
-    )
-
-    local configFile
-    find "${tmpInstallDir}" -type f -print0 | \
-    while IFS= read -r -d '' configFile; do
-        local templateVar
-        for templateVar in "${templateVars[@]}"; do
-            if ! declare -p "${templateVar}" >/dev/null 2>&1; then
-                messageError "No value for ${templateVar}."
-                exit 1
-            fi
-            local templateReplacement="${!templateVar}"
-            perl -i -p0e 's~\@\Q'"${templateVar}"'\E\@~'"${templateReplacement}"'~g' "${configFile}"
-        done
-    done
 }

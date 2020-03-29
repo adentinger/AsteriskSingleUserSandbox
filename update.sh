@@ -8,6 +8,7 @@ THIS_SCRIPT_BASENAME="$(basename "${BASH_SOURCE[0]}")"
 source "${COMMON_SCRIPT}"
 
 # Parse other scripts.
+source "${SCRIPTS_DIR}/templates"
 source "${SCRIPTS_DIR}/asterisk"
 source "${SCRIPTS_DIR}/moh"
 
@@ -44,6 +45,12 @@ parseArgs() {
             ;;
         esac
     fi
+
+    if [ "${VAR_CONFIG_FILE}" == "" ]; then
+        messageError "--conf argument missing."
+        usage
+        exit 1
+    fi
 }
 
 restartAsterisk() {
@@ -51,9 +58,20 @@ restartAsterisk() {
     systemctl restart asterisk.service
 }
 
+setupCleanupTrap() {
+    trap cleanupTrapHandler EXIT
+}
+
+cleanupTrapHandler() {
+    message "Running cleanup."
+    cleanTemplateVariables
+}
+
 run() {
     parseArgs "$@"
     assertRoot
+    setupCleanupTrap
+    parseVariableConfigFile
     updateAsteriskConfig
     updateMusicOnHold
     restartAsterisk
