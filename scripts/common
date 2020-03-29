@@ -26,8 +26,8 @@ isTty() {
 message() {
     if isTty 1; then
         echo -n -e '\e[1;92m'
-        echo "$@"
-        echo -n -e '\e[0m'
+        echo -n "$@"
+        echo -n -e '\e[0m\n'
     else
         echo "$@"
     fi
@@ -35,13 +35,37 @@ message() {
 
 messageError() {
     if isTty 2; then
-        echo -n -e '\e[1;91m'
-        echo "$@" >&2
-        echo -n -e '\e[0m'
+        echo -n -e '\e[1;91m' >&2
+        echo -n "$@" >&2
+        echo -n -e '\e[0m\n' >&2
     else
         echo "$@" >&2
     fi
     false
+}
+
+# EXPECTED PARAMS:
+#
+# 1 : The actual number of arguments
+# 2 : The minimum number of arguments expected
+# 3 : The maximum number of arguments expected
+# OR
+# 1 : The actual number of arguments
+# 2 : The exact number of arguments expected
+#
+# RETURN CODE:
+# Nonzero if expected != actual ; otherwise 0
+checkParamNum() {
+    local actual="${1}"
+    local min="${2}"
+    if [ $# -ge 3 ]; then
+        local max="${3}"
+    else
+        local max="${min}"
+    fi
+    if [ "${actual}" -lt "${1}" ] || [ "${actual}" -gt "${2}" ]; then
+        messageError "${FUNCNAME[1]} : Got ${actual} params ; expected $([ "${min}" == "${max}" ] && echo "${min}" || echo "between ${min} and ${max}")."
+    fi
 }
 
 assertRoot() {
@@ -59,11 +83,12 @@ deleteAndSyncDirectory() {
     fi
     local dstDir="${2}"
 
-    rsync -Pruz --delete-after "${srcDir}" "${dstDir}"
+    rsync -Pruzog --delete-after "${srcDir}" "${dstDir}"
 }
 
 changeOwnershipAndModes() {
-    local dir="${1}"
+    checkParamNum $# 2 3 || exit 1
+    local file="${1}"
     local usr="${2}"
     if [ $# -gt 3 ]; then
         local grp="${3}"
@@ -71,7 +96,25 @@ changeOwnershipAndModes() {
         local grp="${usr}"
     fi
 
-    chmod -R 640 "${dir}"
-    chown -R "${usr}" "${dir}"
-    chgrp -R "${grp}" "${dir}"
+    # Run commands with recursive flags in case the file is a directory.
+    chmod -R 640 "${file}"
+    chown -R "${usr}:${grp}" "${file}"
+}
+
+# Finds regular files in a directory, and sets the files
+# as an array in a variable.
+# PARAMS:
+# 1 : output variable name.
+# 2 : directory.
+findRegularFilesInDir() {
+    checkParamNum $# 2 || exit 1
+    local outVar="${1}"
+    local dir="${2}"
+
+    local oldIfs="${IFS}"
+    local IFS=$'\n'
+    local files=($(find "${dir}" -type f -print))
+    local IFS="${oldIfs}"
+
+    eval "${outVar}"="($(printf '%q ' "${files[@]}"))"
 }

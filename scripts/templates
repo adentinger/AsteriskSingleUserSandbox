@@ -1,0 +1,81 @@
+#!/bin/bash -e
+
+TEMPLATE_VARS=(
+    CALLER_NAME
+    DIAL_TIME_SEC
+    DID_NUMBER
+    DOMAIN_NAME
+    ENDPOINT1_PASSWORD
+    ENDPOINT2_PASSWORD
+    ENDPOINT3_PASSWORD
+    ENDPOINT4_PASSWORD
+    ENDPOINT5_PASSWORD
+    ENDPOINT_QUALIFY_FREQUENCY
+    EXTENSION_LIST
+    MAIN_EXTEN
+    MANAGER_PASSWORD
+    MANAGER_USERNAME
+    VOIPMS_ACCOUNT_ID
+    VOIPMS_PASSWORD
+    VOIPMS_SERVER
+    VOIPMS_SERVER_PORT
+    VOIPMS_USERNAME
+)
+
+parseVariableConfigFile() {
+    local invalidLines="$(grep -oP '^.+$' "${VAR_CONFIG_FILE}" | grep -qP '^[^=]*$|^=')"
+    if [ "${invalidLines}" != "" ]; then
+        messageError "Invalid lines in \"${VAR_CONFIG_FILE}\":"$'\n'"${invalidLines}"
+        usage
+        exit 1
+    fi
+
+    local oldIfs="${IFS}"
+    local IFS=$'\n'
+    local lines=($(grep -oP '^.*?=.*?$' "${VAR_CONFIG_FILE}"))
+    local IFS="${oldIfs}"
+
+    local linePcre='^(?<var>.*?)=(?<value>.*)$'
+    local line
+    for line in "${lines[@]}"; do
+        local var="$(echo "${line}" | perl -p0e "s~${linePcre}~$+{var}~g")"
+        local value="$(echo "${line}" | perl -p0e "s~${linePcre}~$+{value}~g")"
+
+        # Since we're going to use eval, escape the value
+        # characters to avoid surprising results or injection.
+        local valueEscaped="$(printf '%q' "${value}")"
+        eval "${var}"="${valueEscaped}"
+    done
+
+    for templateVar in "${TEMPLATE_VARS[@]}"; do
+        if ! declare -p "${templateVar}" >/dev/null 2>&1; then
+            messageError "No value for ${templateVar}."
+            exit 1
+        fi
+    done
+}
+
+doTemplateReplacement() {
+    checkParamNum $# 1 || exit 1
+    local confDir="${1}"
+
+    local configFiles
+    findRegularFilesInDir configFiles "${tmpInstallDir}"
+    local configFile
+    for configFile in "${configFiles[@]}"; do
+        echo "configFile: \"${configFile}\""
+        local templateVar
+        for templateVar in "${TEMPLATE_VARS[@]}"; do
+            local templateReplacement="${!templateVar}"
+            perl -i -p0e 's~\@\Q'"${templateVar}"'\E\@~'"${templateReplacement}"'~g' "${configFile}"
+        done
+    done
+}
+
+# To avoid leaving e.g. password variables in the shell
+# if the script is "source"'d, rather than "./"'d .
+cleanTemplateVariables() {
+    for templateVar in "${TEMPLATE_VARS[@]}"; do
+        unset "${templateVar}"
+    done
+}
