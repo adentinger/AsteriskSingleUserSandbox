@@ -3,12 +3,7 @@
 updateAsteriskConfig() {
     message 'Updating Asterisk config files.'
 
-    # Do sync and template replacement in a temp directory
-    # so that errors do not leave the actual Asterisk config
-    # dir in an invalid state.
-    local tmpInstallDir="$(mktemp -d)"
-    deleteAndSyncDirectory "${ASTERISK_CONFIG_DIR}" "${tmpInstallDir}"
-    doTemplateReplacement "${tmpInstallDir}"
-    changeOwnershipAndModes "${tmpInstallDir}" asterisk
-    deleteAndSyncDirectory "${tmpInstallDir}" "${ASTERISK_CONFIG_INSTALL_DIR}"
+    local templateConfigDir="$(doTemplateReplacement "${ASTERISK_CONFIG_DIR}" asterisk asterisk)"
+    chmod 755 "${templateConfigDir}"
+    deleteAndSyncDirectory "${templateConfigDir}" "${ASTERISK_CONFIG_INSTALL_DIR}"
 }

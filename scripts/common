@@ -11,7 +11,9 @@ ASTERISK_CONFIG_INSTALL_DIR=/etc/asterisk
 DATA_DIR="${GIT_ROOT_DIR}/data"
 MOH_DIR="${DATA_DIR}/music-on-hold"
 MOH_INSTALL_DIR=/usr/share/asterisk/moh
-SYSTEMD_DIR="${GIT_ROOT}/systemd"
+AMI_CLIENT_DIR="${GIT_ROOT_DIR}/ami-client"
+AMI_CLIENT_INSTALL_DIR="/etc/asterisk-config/ami-client"
+SYSTEMD_DIR="${GIT_ROOT_DIR}/systemd"
 SYSTEMD_UNITS_DIR="${SYSTEMD_DIR}/units"
 SYSTEMD_UNITS_INSTALL_DIR=/etc/systemd/system
 
@@ -63,7 +65,7 @@ checkParamNum() {
     else
         local max="${min}"
     fi
-    if [ "${actual}" -lt "${1}" ] || [ "${actual}" -gt "${2}" ]; then
+    if [ "${actual}" -lt "${min}" ] || [ "${actual}" -gt "${max}" ]; then
         messageError "${FUNCNAME[1]} : Got ${actual} params ; expected $([ "${min}" == "${max}" ] && echo "${min}" || echo "between ${min} and ${max}")."
     fi
 }
@@ -76,6 +78,7 @@ assertRoot() {
 }
 
 deleteAndSyncDirectory() {
+    checkParamNum $# 2 2 || exit 1
     local srcDir="${1}"
     # Append "/" to srcDir if there isn't one already.
     if ! echo "${srcDir}" | grep -qP '/$'; then
@@ -83,14 +86,26 @@ deleteAndSyncDirectory() {
     fi
     local dstDir="${2}"
 
-    rsync -Pruzog --delete-after "${srcDir}" "${dstDir}"
+    rsync -Puza --delete-after "${srcDir}" "${dstDir}"
+}
+
+installDirectoryContents() {
+    checkParamNum $# 2 2 || exit 1
+    local srcDir="${1}"
+    # Append "/" to srcDir if there isn't one already.
+    if ! echo "${srcDir}" | grep -qP '/$'; then
+        srcDir="${srcDir}/"
+    fi
+    local dstDir="${2}"
+
+    rsync -Puza "${srcDir}" "${dstDir}"
 }
 
 changeOwnershipAndModes() {
     checkParamNum $# 2 3 || exit 1
     local file="${1}"
     local usr="${2}"
-    if [ $# -gt 3 ]; then
+    if [ $# -ge 3 ]; then
         local grp="${3}"
     else
         local grp="${usr}"

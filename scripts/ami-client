@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+updateAmiClient() {
+    message "Updating AMI Client code."
+    local buildDir="${AMI_CLIENT_DIR}/build"
+    local nodeModulesDir="${AMI_CLIENT_DIR}/node_modules"
+    local nodeModulesInstallDir="${AMI_CLIENT_INSTALL_DIR}/node_modules"
+    (cd "${AMI_CLIENT_DIR}" && npm run build)
+    mkdir -p "${AMI_CLIENT_INSTALL_DIR}"
+    deleteAndSyncDirectory "${buildDir}" "${AMI_CLIENT_INSTALL_DIR}"
+    mkdir -p "${nodeModulesInstallDir}"
+    deleteAndSyncDirectory "${nodeModulesDir}" "${nodeModulesInstallDir}"
+}
