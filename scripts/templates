@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 TEMPLATE_VARS=(
+    AMI_MANAGER_CLIENT_INSTALL_PATH
     CALLER_NAME
     DIAL_TIME_SEC
     DID_NUMBER
@@ -55,21 +56,40 @@ parseVariableConfigFile() {
     done
 }
 
+# Performs template replacement of given directory in a
+# new temporary directory and echoes it.
 doTemplateReplacement() {
-    checkParamNum $# 1 || exit 1
-    local confDir="${1}"
+    checkParamNum $# 2 3 || exit 1
+    local srcDir="${1}"
+    local usr="${2}"
+    if [ $# -ge 3 ]; then
+        local grp="${3}"
+    else
+        local grp="${usr}"
+    fi
 
-    local configFiles
-    findRegularFilesInDir configFiles "${tmpInstallDir}"
-    local configFile
-    for configFile in "${configFiles[@]}"; do
-        echo "configFile: \"${configFile}\""
-        local templateVar
-        for templateVar in "${TEMPLATE_VARS[@]}"; do
-            local templateReplacement="${!templateVar}"
-            perl -i -p0e 's~\@\Q'"${templateVar}"'\E\@~'"${templateReplacement}"'~g' "${configFile}"
+    # Do sync and template replacement in a temp directory
+    # so that errors do not leave the actual config
+    # dir in an invalid state.
+    local tmpInstallDir="$(mktemp -d)"
+    (
+        installDirectoryContents "${srcDir}" "${tmpInstallDir}"
+
+        local templateFiles
+        findRegularFilesInDir templateFiles "${tmpInstallDir}"
+        local templateFile
+        for templateFile in "${templateFiles[@]}"; do
+            local templateVar
+            for templateVar in "${TEMPLATE_VARS[@]}"; do
+                local templateReplacement="${!templateVar}"
+                perl -i -p0e 's~\@\Q'"${templateVar}"'\E\@~'"${templateReplacement}"'~g' "${templateFile}"
+            done
         done
-    done
+        changeOwnershipAndModes "${tmpInstallDir}" "${usr}" "${grp}"
+    ) >/dev/null
+
+    # Return temporary install dir.
+    echo "${tmpInstallDir}"
 }
 
 # To avoid leaving e.g. password variables in the shell

@@ -1,0 +1,43 @@
+#!/bin/bash -e
+
+updateSystemd() {
+    message "Updating systemd config."
+    updateSystemdUnits
+}
+
+updateSystemdUnits() {
+    message "-- Updating systemd units."
+
+    local tmpSystemdDir="$(doTemplateReplacement "${SYSTEMD_UNITS_DIR}" root)"
+    chmod -R 644 "${tmpSystemdDir}"
+
+    local systemdUnits
+    findRegularFilesInDir systemdUnits "${tmpSystemdDir}"
+
+    # Copy the units
+    local unitFile
+    for unitFile in "${systemdUnits[@]}"; do
+        cp "${unitFile}" "${SYSTEMD_UNITS_INSTALL_DIR}"
+    done
+
+    # Now have systemd reload all units and
+    # enable/(re)start them.
+    systemctl daemon-reload
+    for unitFile in "${systemdUnits[@]}"; do
+        local unitName="$(basename "${unitFile}")"
+        case "${unitFile}" in
+        *.service)
+            # Make unit run with WantedBy target (e.g.
+            # on startup).
+            systemctl enable "${unitName}"
+            # Also starts the unit if it was not running.
+            systemctl restart "${unitName}"
+            ;;
+        *)
+            messageError "Systemd unit \"{unitName}\" not handled by " \
+                "script or invalid."
+            exit 1
+            ;;
+        esac
+    done
+}

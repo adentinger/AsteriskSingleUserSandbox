@@ -8,9 +8,11 @@ THIS_SCRIPT_BASENAME="$(basename "${BASH_SOURCE[0]}")"
 source "${COMMON_SCRIPT}"
 
 # Parse other scripts.
-source "${SCRIPTS_DIR}/templates"
+source "${SCRIPTS_DIR}/ami-client"
 source "${SCRIPTS_DIR}/asterisk"
 source "${SCRIPTS_DIR}/moh"
+source "${SCRIPTS_DIR}/systemd"
+source "${SCRIPTS_DIR}/templates"
 
 usage() {
     echo "Usage:" >&2
@@ -74,6 +76,8 @@ run() {
     parseVariableConfigFile
     updateAsteriskConfig
     updateMusicOnHold
+    updateAmiClient
+    updateSystemd
     restartAsterisk
 }
 
