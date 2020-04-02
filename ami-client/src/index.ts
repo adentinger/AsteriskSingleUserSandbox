@@ -7,11 +7,26 @@ import { AmiListEndpointsAction } from "./AmiListEndpointsAction";
 import { DeviceStateChangeEvent } from "./DeviceStateChangeEvent";
 import { AmiMessageSendAction } from "./AmiMessageSendAction";
 
+function requiredEnvVar(varName: string): string {
+    const value = process.env[varName];
+    if (value) {
+        return value;
+    }
+    else {
+        console.error(`Environement variable ${varName} is not defined.`);
+        process.exit(1);
+    }
+}
+
+const amiIpAddress = requiredEnvVar("AMI_IP_ADDRESS");
+const amiUsername = requiredEnvVar("AMI_USERNAME");
+const amiPassword = requiredEnvVar("AMI_PASSWORD");
+
 const ami = amiGen(
     "5038",
-    "@AMI_IP_ADDRESS@",
-    "@AMI_USERNAME@",
-    "@AMI_PASSWORD@",
+    amiIpAddress,
+    amiUsername,
+    amiPassword,
     true
 );
 ami.keepConnected();

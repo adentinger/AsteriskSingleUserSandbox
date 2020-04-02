@@ -7,6 +7,9 @@ After=asterisk.service
 ExecStart=/usr/bin/node "@AMI_MANAGER_CLIENT_INSTALL_PATH@/index.js"
 Restart=always
 RestartSec=1
+Environment=AMI_IP_ADDRESS=@AMI_IP_ADDRESS@
+Environment=AMI_USERNAME=@MANAGER_USERNAME@
+Environment=AMI_PASSWORD=@MANAGER_PASSWORD@
 
 [Install]
 WantedBy=multi-user.target
