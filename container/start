@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+if [ "${AMI_MANAGER_CLIENT_INSTALL_PATH}" == "" ]; then
+    echo "AMI_MANAGER_CLIENT_INSTALL_PATH is empty or not defined" >&2
+    exit 1
+fi
+
+# Turn on bash's job control
+set -m
+
+node "${AMI_MANAGER_CLIENT_INSTALL_PATH}/index.js" &
+/usr/sbin/asterisk -g -f
