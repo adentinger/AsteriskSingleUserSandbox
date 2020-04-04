@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+buildContainer() {
+    pushd "${GIT_ROOT_DIR}"
+    local containerRelativePath="$(realpath --relative-to="$(pwd)" "${CONTAINER_DIR}")"
+    local imageFilesDirRelative="$(realpath --relative-to="$(pwd)" "${IMAGE_FILES_DIR}")"
+
+    mkdir -p "${IMAGE_FILES_DIR}"
+    cp "${VAR_CONFIG_FILE}" "${IMAGE_FILES_DIR}"
+    local configFilePath="${imageFilesDirRelative}/$(basename "${VAR_CONFIG_FILE}")"
+
+    docker build \
+        --build-arg=CONFIG_FILE="${configFilePath}" \
+        --build-arg=AMI_MANAGER_CLIENT_INSTALL_PATH="${AMI_MANAGER_CLIENT_INSTALL_PATH}" \
+        -t "${DOCKER_IMAGE_NAME}" \
+        -f "${containerRelativePath}/Dockerfile" \
+        .
+
+    popd
+}
+
+startContainer() {
+    docker run -d \
+        -e AMI_MANAGER_CLIENT_INSTALL_PATH="${AMI_MANAGER_CLIENT_INSTALL_PATH}" \
+        "${DOCKER_IMAGE_NAME}"
+}

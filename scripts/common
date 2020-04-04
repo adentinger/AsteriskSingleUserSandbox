@@ -17,6 +17,10 @@ SYSTEMD_DIR="${GIT_ROOT_DIR}/systemd"
 SYSTEMD_UNITS_DIR="${SYSTEMD_DIR}/units"
 SYSTEMD_UNITS_INSTALL_DIR=/etc/systemd/system
 
+DOCKER_IMAGE_NAME=asterisk-home
+CONTAINER_DIR="${GIT_ROOT_DIR}/container"
+IMAGE_FILES_DIR="${CONTAINER_DIR}/files-to-add-to-image"
+
 # Restore THIS_SCRIPT_DIR to what it was before.
 THIS_SCRIPT_DIR="${OLD_THIS_SCRIPT_DIR}"
 

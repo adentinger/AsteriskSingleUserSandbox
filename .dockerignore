@@ -1,0 +1,5 @@
+/container/Dockerfile
+/.git/
+/.git*
+/README.md
+/.dockerignore
