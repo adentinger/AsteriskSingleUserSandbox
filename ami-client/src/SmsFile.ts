@@ -54,7 +54,11 @@ export class SmsFile {
         // contains a comma.
         const deviceStringsMatches = receivedByString.match(/[^,]+/g);
         if (deviceStringsMatches) {
-            return deviceStringsMatches.map(ds => new Device(ds));
+            const dsNoDuplicates = new Set<string>();
+            deviceStringsMatches.forEach(ds => dsNoDuplicates.add(ds));
+            const receivedByArray: Device[] = [];
+            dsNoDuplicates.forEach(ds => receivedByArray.push(new Device(ds)));
+            return receivedByArray;
         }
         else {
             return [];
@@ -62,9 +66,13 @@ export class SmsFile {
     }
 
     public set receivedBy(value: Device[]) {
+        const dsSetNoDuplicates = new Set<string>();
+        value.forEach(dev => dsSetNoDuplicates.add(dev.getDeviceString()));
+        const dsArrayNoDuplicates: string[] = [];
+        dsSetNoDuplicates.forEach(ds => dsArrayNoDuplicates.push(ds));
         this.writeField(
             SmsFile.RECEIVED_BY_FIELD,
-            value.map(dev => dev.getDeviceString()).join(",")
+            dsArrayNoDuplicates.join(",")
         );
     }
 
