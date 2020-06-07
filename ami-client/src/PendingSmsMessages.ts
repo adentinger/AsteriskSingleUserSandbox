@@ -62,7 +62,7 @@ export class PendingSmsMessages {
 
     protected scheduleSmsReception(sms: SmsFile): void {
         if (sms.wasReceivedByAll()) {
-            if (this.pendingByFilename.has(sms.abspath)) {
+            if (!this.pendingByFilename.has(sms.abspath)) {
                 console.log("New SMS", sms.abspath, "received by all. Deleting.");
             }
             else {
@@ -72,7 +72,7 @@ export class PendingSmsMessages {
             this.remove(sms);
         }
         else {
-            if (this.pendingByFilename.has(sms.abspath)) {
+            if (!this.pendingByFilename.has(sms.abspath)) {
                 console.log("New SMS", sms.abspath, "not received by all. Keeping.");
             }
             else {
