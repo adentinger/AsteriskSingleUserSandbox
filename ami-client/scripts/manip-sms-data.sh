@@ -13,6 +13,7 @@ usage() {
     echo "  -n | --callerid-name" >&2
     echo "  -u | --callerid-num" >&2
     echo "  -r | --received-by" >&2
+    echo "  -d | --date" >&2
     echo "  -b | --body" >&2
 }
 
@@ -42,6 +43,10 @@ parseNextHeaderArg() {
 
     -b | --body )
         BODY=yes
+        ;;
+
+    -d | --date)
+        DATE=yes
         ;;
 
     *)
@@ -107,24 +112,30 @@ runGet() {
     if [ "${RECEIVED_BY}" != "" ]; then
         head -n4 "${SMS_FILE}" | tail -n1
     fi
+    if [ "${DATE}" != "" ]; then
+        head -n5 "${SMS_FILE}" | tail -n1
+    fi
     if [ "${BODY}" != "" ]; then
         # Read rest of file, starting at line N.
-        tail -n +5 "${SMS_FILE}"
+        tail -n +6 "${SMS_FILE}"
     fi
 }
 
 runSet() {
     if [ "${NUMBER_TO}" != "" ]; then
-        sed -ie '1s|.*|'"${VALUE}"'|' "${SMS_FILE}"
+        sed -i -e '1s|.*|'"${VALUE}"'|' "${SMS_FILE}"
     fi
     if [ "${CALLERID_NAME}" != "" ]; then
-        sed -ie '2s|.*|'"${VALUE}"'|' "${SMS_FILE}"
+        sed -i -e '2s|.*|'"${VALUE}"'|' "${SMS_FILE}"
     fi
     if [ "${CALLERID_NUM}" != "" ]; then
-        sed -ie '3s|.*|'"${VALUE}"'|' "${SMS_FILE}"
+        sed -i -e '3s|.*|'"${VALUE}"'|' "${SMS_FILE}"
     fi
     if [ "${RECEIVED_BY}" != "" ]; then
-        sed -ie '4s|.*|'"${VALUE}"'|' "${SMS_FILE}"
+        sed -i -e '4s|.*|'"${VALUE}"'|' "${SMS_FILE}"
+    fi
+    if [ "${DATE}" != "" ]; then
+        sed -i -e '5s|.*|'"${VALUE}"'|' "${SMS_FILE}"
     fi
     if [ "${BODY}" != "" ]; then
         # Write headers back, erasing the body.
