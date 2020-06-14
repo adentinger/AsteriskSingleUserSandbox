@@ -90,7 +90,8 @@ parseArgs() {
 parseContainerArgs() {
     MODE=container
     while [ $# -gt 0 ]; do
-        case "${1}" in
+        local arg="${1}"
+        case "${arg}" in
         --conf | -c)
             if [ $# -lt 2 ]; then
                 messageError "Missing argument after \"${arg}\"."
@@ -116,7 +117,8 @@ parseContainerArgs() {
 parseContainerInitArgs() {
     MODE=container-init
     while [ $# -gt 0 ]; do
-        case "${1}" in
+        local arg="${1}"
+        case "${arg}" in
         --conf | -c)
             if [ $# -lt 2 ]; then
                 messageError "Missing argument after \"${arg}\"."
@@ -142,7 +144,8 @@ parseContainerInitArgs() {
 parseInstallArgs() {
     MODE=install
     while [ $# -gt 0 ]; do
-        case "${1}" in
+        local arg="${1}"
+        case "${arg}" in
         --conf | -c)
             if [ $# -lt 2 ]; then
                 messageError "Missing argument after \"${arg}\"."
