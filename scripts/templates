@@ -3,7 +3,9 @@
 TEMPLATE_VARS=(
     AMI_IP_ADDRESS
     AMI_MANAGER_CLIENT_INSTALL_PATH
+    CALL_ACCEPT_TIME_RANGE
     CALLER_NAME
+    DEVICE_LIST
     DIAL_TIME_SEC
     DID_NUMBER
     DOMAIN_NAME
@@ -13,7 +15,6 @@ TEMPLATE_VARS=(
     ENDPOINT4_PASSWORD
     ENDPOINT5_PASSWORD
     ENDPOINT_QUALIFY_FREQUENCY
-    DEVICE_LIST
     MAIN_EXTEN
     MANAGER_PASSWORD
     MANAGER_USERNAME
@@ -52,7 +53,7 @@ parseVariableConfigFile() {
 
     for templateVar in "${TEMPLATE_VARS[@]}"; do
         if ! declare -p "${templateVar}" >/dev/null 2>&1; then
-            messageError "No value for ${templateVar}."
+            messageError "No value for ${templateVar}"
             exit 1
         fi
     done
