@@ -88,7 +88,8 @@ doTemplateReplacement() {
                 perl -i -p0e 's~\@\Q'"${templateVar}"'\E\@~'"${templateReplacement}"'~g' "${templateFile}"
             done
         done
-        changeOwnershipAndModes "${tmpInstallDir}" "${usr}" "${grp}"
+        chmod 750 "${tmpInstallDir}"
+        chown -R "${usr}":"${grp}" "${tmpInstallDir}"
     ) >/dev/null
 
     # Return temporary install dir.

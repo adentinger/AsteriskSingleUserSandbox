@@ -6,11 +6,21 @@ OLD_THIS_SCRIPT_DIR="${THIS_SCRIPT_DIR}"
 THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GIT_ROOT_DIR="$(realpath "${THIS_SCRIPT_DIR}/..")"
 SCRIPTS_DIR="${GIT_ROOT_DIR}/scripts"
+
 ASTERISK_CONFIG_DIR="${GIT_ROOT_DIR}/asterisk"
 ASTERISK_CONFIG_INSTALL_DIR=/etc/asterisk
-DATA_DIR="${GIT_ROOT_DIR}/data"
-MOH_DIR="${DATA_DIR}/music-on-hold"
+ASTERISK_SPOOLDIR=/var/spool/asterisk
+ASTERISK_DATA_DIR=/usr/share/asterisk
+
+# Not sure how else to call this. This is not Asterisk's datadir ;
+# it's just the directory where I keep data files (sounds, binaries, ...)
+MY_DATA_FILES_DIR="${GIT_ROOT_DIR}/my-data"
+DATA_DIR="${MY_DATA_FILES_DIR}/data"
+SPOOL_DIR="${MY_DATA_FILES_DIR}/spool"
+MOH_DIR="${MY_DATA_FILES_DIR}/music-on-hold"
 MOH_INSTALL_DIR=/usr/share/asterisk/moh
+VOICEMAIL_SOUNDS_DIR="${SPOOL_DIR}/voicemail"
+voicemailSoundsInstallDir() { echo "${ASTERISK_SPOOLDIR}/voicemail/default/${MAIN_EXTEN}"; }
 AMI_CLIENT_DIR="${GIT_ROOT_DIR}/ami-client"
 AMI_CLIENT_INSTALL_DIR="/etc/asterisk-config/ami-client"
 AMI_CLIENT_SCRIPTS_DIR="${AMI_CLIENT_DIR}/scripts"
@@ -105,21 +115,6 @@ installDirectoryContents() {
     local dstDir="${2}"
 
     rsync -Puza "${srcDir}" "${dstDir}"
-}
-
-changeOwnershipAndModes() {
-    checkParamNum $# 2 3 || exit 1
-    local file="${1}"
-    local usr="${2}"
-    if [ $# -ge 3 ]; then
-        local grp="${3}"
-    else
-        local grp="${usr}"
-    fi
-
-    # Run commands with recursive flags in case the file is a directory.
-    chmod -R 640 "${file}"
-    chown -R "${usr}:${grp}" "${file}"
 }
 
 # Finds regular files in a directory, and sets the files

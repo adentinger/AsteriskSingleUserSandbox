@@ -1,0 +1,8 @@
+#!/bin/bash -e
+
+updateDatadir() {
+    message 'Updating Asterisk data directory files...'
+    installDirectoryContents "${DATA_DIR}" "${ASTERISK_DATA_DIR}"
+    chmod 750 "${ASTERISK_DATA_DIR}"
+    chown -R asterisk:asterisk "${ASTERISK_DATA_DIR}"
+}
