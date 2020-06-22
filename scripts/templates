@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-TEMPLATE_VARS=(
+declare TEMPLATE_VARS=(
     AMI_IP_ADDRESS
     AMI_MANAGER_CLIENT_INSTALL_PATH
     CALL_ACCEPT_TIME_RANGE
@@ -19,11 +19,49 @@ TEMPLATE_VARS=(
     MANAGER_PASSWORD
     MANAGER_USERNAME
     PJSIP_PORT
+    RTP_START_PORT
+    RTP_END_PORT
+    VOICEMAIL_USERNAME
+    VOICEMAIL_PASSWORD
+    VOICEMAIL_USER_EMAIL
+    VOICEMAIL_PAGER_EMAIL
     VOIPMS_ACCOUNT_ID
     VOIPMS_PASSWORD
     VOIPMS_SERVER
     VOIPMS_SERVER_PORT
     VOIPMS_USERNAME
+)
+
+declare -A TEMPLATE_VARS_AND_DESC=(
+    [AMI_IP_ADDRESS]='Domain/subdomain/IP address of where the Asterisk server is relative to the AMI client. Please set this to "localhost".'
+    [AMI_MANAGER_CLIENT_INSTALL_PATH]='Where to install the compiled AMI client. "/etc/asterisk-config/ami-client" should be fine.'
+    [CALL_ACCEPT_TIME_RANGE]='Time range for which to accept calls. Times outside this range will fall straight to the voicemail using an alternate voicemail greeting. See here to time range syntax: https://www.voip-info.org/asterisk-cmd-gotoiftime/. Example: "6:00-23:00,*,*,*" for 6AM to 11PM.'
+    [CALLER_NAME]='Caller name to use when performing an external call. Example: "John Doe"'
+    [DEVICE_LIST]='Comma-separated list of devices to dial when dialling the main extension. This MUST correspond to the list of AORs in pjsip.conf, so, unless you change anything there, use: "PJSIP/linux,PJSIP/home-phone,PJSIP/tablet,PJSIP/cell-phone,PJSIP/work-computer1"'
+    [DIAL_TIME_SEC]='Number of seconds to ring before going to voicemail. Example: "15"'
+    [DID_NUMBER]='VoipMS DID number ("phone number") to dial as when performing an external call/sending SMS messages. Example: "1234567890"'
+    [DOMAIN_NAME]='Domain/subdomain/IP address of the Asterisk server. If you want a free subdomain name, go to https://www.noip.com/ and configure your router for Dynamic DNS using the domain name, username and password you provided. That'"'"'s why I use. Example: "mysubdomain.ddns.net"'
+    [ENDPOINT1_PASSWORD]='Password of PJSIP/linux         . Example: "iloveasterisk"'
+    [ENDPOINT2_PASSWORD]='Password of PJSIP/home-phone    . Example: "iloveasterisk"'
+    [ENDPOINT3_PASSWORD]='Password of PJSIP/work-computer1. Example: "iloveasterisk"'
+    [ENDPOINT4_PASSWORD]='Password of PJSIP/tablet        . Example: "iloveasterisk"'
+    [ENDPOINT5_PASSWORD]='Password of PJSIP/cell-phone    . Example: "iloveasterisk"'
+    [ENDPOINT_QUALIFY_FREQUENCY]='How often to send a SIP OPTIONS packet to connected endpoints. Used to keep the NAT open in case the endpoint is behind a NAT. Example: "15"'
+    [MAIN_EXTEN]='Main extension used in the dialplan. Your endpoints will be reachable at this extension ; your VoicemailMain (checking your voicemail messages) will be at *${MAIN_EXTEN}, and, if you ever want to transfer somebody to leave you a voicemail message, the extension number to leave a message is **${MAIN_EXTEN}.'
+    [MANAGER_PASSWORD]='Password of the AMI manager. Example: "helovesasterisk"'
+    [MANAGER_USERNAME]='Username of the AMI manager. Example: "mngr"'
+    [PJSIP_PORT]='UDP port of asterisk for SIP. Use "5060" if you have no reason not to.'
+    [RTP_START_PORT]='UDP port of asterisk for RTP. A range of 100 ports should be more than enough for personal use. Example: "18000"'
+    [RTP_END_PORT]='UDP port of asterisk for RTP. A range of 100 ports should be more than enough for personal use. Example: "18099"'
+    [VOICEMAIL_USERNAME]='Username of the voicemail (not sure yet what this does, but it'"'"'s required, so whatever). Example: "JohnDoe"'
+    [VOICEMAIL_PASSWORD]='Password of the voicemail. Example: "123456"'
+    [VOICEMAIL_USER_EMAIL]='User email to use for the voicemail (currently, I don'"'"'t seem to be getting any emails, but whatever). Example: me@gmail.com'
+    [VOICEMAIL_PAGER_EMAIL]='User email to use for the voicemail (not sure yet what this does, but it'"'"'s required to use other fields, so whatever). Example: pager@gmail.com'
+    [VOIPMS_ACCOUNT_ID]='VoipMS account ID. Example: 123456789'
+    [VOIPMS_PASSWORD]='VoipMS Asterisk registering password. Example: theyloveasterisk'
+    [VOIPMS_SERVER]='Domain/subdomain/IP address of the VoipMS SIP server to register to. Example: "montreal.voip.ms"'
+    [VOIPMS_SERVER_PORT]='Port number of the VoipMS SIP server to register to. I think they only use 5060, so specify "5060".'
+    [VOIPMS_USERNAME]='VoipMS Asterisk registering username. I think this is the same thing as your account ID if you aren'"'"'t using subaccounts. Example: 123456789'
 )
 
 parseVariableConfigFile() {

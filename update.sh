@@ -52,8 +52,10 @@ usage() {
     echo "The configuration file should be a file where each non-empty" >&2
     echo "line looks like var=value." >&2
     echo "Required template variables:" >&2
+    echo >&2
     for templateVar in "${TEMPLATE_VARS[@]}"; do
-        echo "${templateVar}" >&2
+        echo "${templateVar}: ${TEMPLATE_VARS_AND_DESC[${templateVar}]}" >&2
+        echo >&2
     done
 }
 
