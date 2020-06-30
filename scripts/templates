@@ -21,10 +21,11 @@ declare TEMPLATE_VARS=(
     PJSIP_PORT
     RTP_START_PORT
     RTP_END_PORT
-    VOICEMAIL_USERNAME
-    VOICEMAIL_PASSWORD
-    VOICEMAIL_USER_EMAIL
+    SOUNDS_FORMATS
     VOICEMAIL_PAGER_EMAIL
+    VOICEMAIL_PASSWORD
+    VOICEMAIL_USERNAME
+    VOICEMAIL_USER_EMAIL
     VOIPMS_ACCOUNT_ID
     VOIPMS_PASSWORD
     VOIPMS_SERVER
@@ -53,10 +54,11 @@ declare -A TEMPLATE_VARS_AND_DESC=(
     [PJSIP_PORT]='UDP port of asterisk for SIP. Use "5060" if you have no reason not to.'
     [RTP_START_PORT]='UDP port of asterisk for RTP. A range of 100 ports should be more than enough for personal use. Example: "18000"'
     [RTP_END_PORT]='UDP port of asterisk for RTP. A range of 100 ports should be more than enough for personal use. Example: "18099"'
-    [VOICEMAIL_USERNAME]='Username of the voicemail (not sure yet what this does, but it'"'"'s required, so whatever). Example: "JohnDoe"'
-    [VOICEMAIL_PASSWORD]='Password of the voicemail. Example: "123456"'
-    [VOICEMAIL_USER_EMAIL]='User email to use for the voicemail (currently, I don'"'"'t seem to be getting any emails, but whatever). Example: me@gmail.com'
+    [SOUNDS_FORMATS]='Format(s) of sounds (prompts, voicemail messages, ...). Does not apply to music-on-hold. Supported formats (unless I'"'"'ve forgotten to update this message): wav, gsm, ulaw, and alaw. Example: "wav|ulaw|alaw".'
     [VOICEMAIL_PAGER_EMAIL]='User email to use for the voicemail (not sure yet what this does, but it'"'"'s required to use other fields, so whatever). Example: pager@gmail.com'
+    [VOICEMAIL_PASSWORD]='Password of the voicemail. Example: "123456"'
+    [VOICEMAIL_USERNAME]='Username of the voicemail (not sure yet what this does, but it'"'"'s required, so whatever). Example: "JohnDoe"'
+    [VOICEMAIL_USER_EMAIL]='User email to use for the voicemail (currently, I don'"'"'t seem to be getting any emails, but whatever). Example: me@gmail.com'
     [VOIPMS_ACCOUNT_ID]='VoipMS account ID. Example: 123456789'
     [VOIPMS_PASSWORD]='VoipMS Asterisk registering password. Example: theyloveasterisk'
     [VOIPMS_SERVER]='Domain/subdomain/IP address of the VoipMS SIP server to register to. Example: "montreal.voip.ms"'

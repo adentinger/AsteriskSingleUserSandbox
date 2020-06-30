@@ -5,5 +5,5 @@ updateAsteriskConfig() {
 
     local templateConfigDir="$(doTemplateReplacement "${ASTERISK_CONFIG_DIR}" asterisk asterisk)"
     chmod 755 "${templateConfigDir}"
-    deleteAndSyncDirectory "${templateConfigDir}" "${ASTERISK_CONFIG_INSTALL_DIR}"
+    deleteAndSyncDirectory "${templateConfigDir}" "${ASTERISK_CONFIG_INSTALL_DIR}" >/dev/null
 }
