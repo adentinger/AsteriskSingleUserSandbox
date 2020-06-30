@@ -297,5 +297,5 @@ wavToAlaw() {
     assertDir "${dstDir}"
 
     local dstFile="${dstDir}/$(basename "${wavFile}" .wav).alaw"
-    ffmpeg -y -i "${wavFile}" -codec:a pcm_alaw -f alaw "${dstFile}" >/dev/null 2>&1
+    ffmpeg -y -i "${wavFile}" -af "highpass=f=300, lowpass=f=3400" -ar 8000 -ac 1 -ab 64k -f alaw "${dstFile}" >/dev/null 2>&1
 }
