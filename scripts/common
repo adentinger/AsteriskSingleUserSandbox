@@ -187,17 +187,17 @@ installWavSoundFiles() {
     local formats=(${formatsString})
     local IFS="${oldIfs}"
     local wavFiles="$(find "${src}" -type f -name '*.wav' -print)"
-    # Assert format list is not empty.
-    if [ "${#formatsString[@]}" -eq 0 ]; then
-        messageError "No format specified to convert WAV file."
-        exit 1
-    fi
 
     # Convert each format to lower case.
     local i
     for ((i=0; i < "${#formats[@]}"; ++i)); do
         formats["${i}"]="$(echo "${formats[${i}]}" | awk '{print tolower($0)}')"
     done
+    # Assert format list is not empty.
+    if [ "${#formats[@]}" -eq 0 ]; then
+        messageError "No format specified to convert WAV file."
+        exit 1
+    fi
 
     # Create destination files
     local oldIfs="${IFS}"
@@ -275,7 +275,7 @@ wavToUlaw() {
     assertDir "${dstDir}"
 
     local dstFile="${dstDir}/$(basename "${wavFile}" .wav).ulaw"
-    ffmpeg -y -i "${wavFile}" -codec:a pcm_mulaw -f mulaw "${dstFile}" >/dev/null 2>&1
+    ffmpeg -y -i "${wavFile}" -af "highpass=f=300, lowpass=f=3400" -ar 8000 -ac 1 -ab 64k -f mulaw "${dstFile}" >/dev/null 2>&1
 }
 
 # Converts WAV file specified as first argument to GSM format.
