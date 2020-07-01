@@ -132,3 +132,45 @@ Notes:
 - You will need the `ffmpeg` program in your `PATH` if you specify in the config file formats other than WAV (e.g. `SOUNDS_FORMATS=wav|ulaw`). On Ubuntu 18.04, I installed `ffmpeg` with the command `sudo apt install ffmpeg`.
 - Even though the `update.sh` script gives the impression that it can create a Docker container to run this project in, it's been a while that I tested it, so I'm not sure if it works.
 - The time range that Asterisk uses to go straight to voicemail past a certain time is the system's time, so make sure you have the correct timezone configured on your system. Run the `date` command to tell if that is the case. To change your server's timezone, use the server's GUI if you have a GUI installed, or run a command to do so. Under Ubuntu 18.04, I used the `dpkg-reconfigure tzdata` command to change my server's timezone.
+
+### 5. Configure your phones/softphones
+
+From now on, our Asterisk server is up and ready! It will stay up even if we reboot our server, if it powers off due to a power failure, etc., so it's really completely setup.
+
+All we really need now is to actually setup phones to connect to Asterisk. This of course depends on your phone's user interface, so let's give the example of the Zoiper softphone. Other IP phones or softphones will have very similar requirements, but they might be presented differently, or might have or not have some options.
+
+First, go to Zoiper's settings, then click _Accounts_ and click _Add_.
+
+![Zoiper main screen](my-data/README_img/Zoiper-Main.png "Zoiper main screen")
+
+![Zoiper SIP accounts](my-data/README_img/Zoiper-CreateSipAccount.png "Zoiper SIP accounts")
+
+Now specify which SIP URI to register to. What we write here should look like `<aor>@<domain_name>:<port>`, where:
+
+- `<aor>` is one of the AORs in `pjsip.conf` (`linux` in my case).
+- `<domain_name>` is our Asterisk server's domain name, subdomain name or IP address _compared to where the computer running Zoiper currently is_. If you are on the same network as the server, you will probably have to use the server's private IP address, which you can obtain by running the `ip addr` command on the server. If you are outside of home, this is the same `<domain_name>` as what you specified earlier when setting up your VoipMS server. This also means you will need to change the server's domain name if you leave home or if you had left home but are now back home. The reason for this is that [home routers usually don't support sending packets to their own public IP address from inside the network](https://stackoverflow.com/a/40229684/2252948).
+- `<port>` is the UDP port number of Asterisk's SIP server. This must be the same port as you specified earlier when setting up the VoipMS account.
+
+Also specify the password of the AOR you set in the configuration file earlier. Run `./update.sh --help` for a correspondance between each AOR and the `ENDPOINT*_PASSWORD` values of the configuration file. In the case of AOR `linux`, the password is the value you set for `ENDPOINT1_PASSWORD`.
+
+![Zoiper registering step 1](my-data/README_img/Zoiper-CreateSipAccount-1.png "Zoiper registering step 1")
+
+The next screen should already have the required information because we specified it in the last screen. It's the hostname (`<domain_name>:<port>`) of our Asterisk server.
+
+![Zoiper registering step 2](my-data/README_img/Zoiper-CreateSipAccount-2.png "Zoiper registering step 2")
+
+Not sure what the next screen is for ; I don't think it's useful in our context anyway. Just skip it.
+
+![Zoiper registering step 3](my-data/README_img/Zoiper-CreateSipAccount-3.png "Zoiper registering step 3")
+
+On the next screen, Zoiper should be trying to find what kind of server it is connecting with (SIP server over UDP in our case, not SIP over TLS, nor SIP over TCP, nor IAX over UDP).
+
+![Zoiper registering step 4](my-data/README_img/Zoiper-CreateSipAccount-4.png "Zoiper registering step 4")
+
+Zoiper should now be connected to Asterisk ; you can try to setup a second IP phone/softphone and call yourself by dialling whatever you specified as `MAIN_EXTEN` in the configuration file earlier.
+
+![Zoiper registering step 5](my-data/README_img/Zoiper-CreateSipAccount-5.png "Zoiper registering step 5")
+
+Depending on your phone/softphone, you can configure it further. With the pro version of Zoiper (that I bought), you can specify what extension your VoicemailMain (extension number to check your messages) is, and what extension to transfer people to if you answered the call but later want them to leave you a message. I've noticed other IP phones/softphones have similar features. Once again, the VoicemailMain extension is `*<MAIN_EXTEN>`, and the "leave voicemail message" extension is `**<MAIN_EXTEN>`.
+
+![Zoiper registering step 6](my-data/README_img/Zoiper-CreateSipAccount-6.png "Zoiper registering step 6")
