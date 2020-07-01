@@ -1,4 +1,4 @@
-# AsteriskConfig
+# Asterisk sandbox for a single user
 
 ## Description and features of this project
 
@@ -16,7 +16,7 @@ I wanted to learn Asterisk, to be able to "take my homeline with me anywhere" (i
 
 - This project is not intended to have more than one user ; it is only intended to have multiple phones/softphones belonging to one user.
 - I essentially "made my configuration public", so I did not build a way to disable some features. For example, there is no direct way not to use VoipMS without modifying this project's files. It's not difficult to do when you know where to do it (e.g., just delete some stuff in `pjsip.conf` to disable VoipMS stuff), but it's not direct.
-- I have a few minor bugs with the AMI client. See [my issues tagged "AMI Client"](https://github.com/AnthonyD973/AsteriskConfig/issues?q=is%3Aissue+is%3Aopen+label%3A%22AMI+Client%22++user%3AAnthonyD973).
+- I have a few minor bugs with the AMI client. See [my issues tagged "AMI Client"](https://github.com/AnthonyD973/AsteriskSingleUserSandbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22AMI+Client%22++user%3AAnthonyD973).
 - If you want to actually place or receive calls from "real" phones, you will need a VoIP provider. I transferred my regular home phone number to [VoipMS](https://voip.ms/), so this project is configured for VoipMS. However, as I learned while working on this project, each VoIP provider works differently because the SIP protocol allows for multiple ways to connect to a VoIP server. So you will probably have to look at your provider's website about how to configure `pjsip.conf` (*"chan_pjsip"*) to work with your provider and modify this project's `pjsip.conf` file. Additionally, some providers only show how to configure the old `sip.conf` (*"chan_sip"*), in which case you will have to convert the `sip.conf` configuration to `pjsip.conf`.
 
 ## How to use this project
