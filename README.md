@@ -6,10 +6,10 @@ I wanted to learn Asterisk, to be able to "take my homeline with me anywhere" (i
 
 **Key features:**
 
-- Readymade asterisk config ; only forward the NAT ports, create the config file (explained below) and run one command (also explained below).
+- Readymade asterisk config ; only setup your VoipMS account, forward the NAT ports, create the config file and run one command. All steps are explained below.
 - Currently (at the time of writing this) working asterisk features: voicemail, voicemail MWI (blinking light on phone/softphone when there is an unread voicemail message), music on hold, SMS (via _SIP MESSAGE_ though, not _SIP SIMPLE_ ; my VoIP provider doesn't use _SIP SIMPLE_!), go straight to voicemail past a certain time, ...
 - Some comments explain why things are done the way they are. This way you can use this project to learn the basics of VoIP with Asterisk like I did.
-- (Experimental) An Asterisk Manager Interface (AMI) client. While some endpoints (e.g. a cell phone) is not registered, this client buffers the SMS messages. It sends the missed messages to them once the enpoints register to Asterisk. This client is a systemd unit for robustness.
+- (Experimental) An Asterisk Manager Interface (AMI) client. While some endpoints (e.g. a cell phone) are not registered, this client buffers the SMS messages. It sends the missed messages to them once the enpoints register to Asterisk. This client is a systemd unit for robustness.
 - MIT license: use/modify this project as you like as long as you keep the copyright. Please let me know (a.dentinger@gmail.com) if you use it though ; it will look good on my résumé! :)
 
 **Limitations:**
@@ -23,9 +23,9 @@ I wanted to learn Asterisk, to be able to "take my homeline with me anywhere" (i
 
 ### 1. Prepare your VoipMS account
 
-If you're like me, you'll probably find this Git repo 5 years from when I am writing this, and everything will look different by then. Still, I'll show how to prepare your VoipMS account to support this project, and explain what the various settings do. This might help you adapt to what it looks like now, or show how to do this for another VoIP provider.
+If you're like me, you'll probably find this Git repo 5 years from when I am writing this, and everything will look different by then. Still, I'll show how to prepare your VoipMS account to support this project, and explain what the various settings do. This might help you adapt to what it looks like now, or show how to do this for another VoIP provider, although it might be tedious to do so if you don't know much about how to configure Asterisk.
 
-This will _look_ quite long because of all the screenshots and because I explain what the options do, but it's really no big deal :) .
+Configuring your VoipMS account will _look_ quite long because of all the screenshots and because I explain what the options do, but it's really no big deal :) .
 
 #### Create VoipMS account and get a number
 
@@ -49,7 +49,7 @@ Under the _Inbound Settings_ tab, specify you wish to use the _SIP_ protocol, an
 
 ![Account Settings > Inbound Settings page](my-data/README_img/AccountSettings-InboundSettings.png "Account Settings > Inbound Settings page")
 
-Under the _Advanced tab_, make sure _NAT_ is set to _yes_, since I assume your server will be behind a NAT. Setting to _yes_ does not hurt even if your server is not behind a NAT anyway. This setting should resolve problems where you are able to call a "real" phone number using VoipMS or receive calls from "real" phone numbers from VoipMS but our Asterisk server can't receive the audio from VoipMS, VoipMS can't receive audio from our Asterisk server, or both. (Note that this _doesn't_ fix audio transmission problems between _your phone_ and the Asterisk server ; the port forwarding (explained later) and some of the configuration in `pjsip.conf` fix that.)
+Under the _Advanced tab_, make sure _NAT_ is set to _yes_, since I assume your server will be behind a NAT. Setting to _yes_ does not hurt even if your server is not behind a NAT anyway. This setting should resolve problems where you calls from a "real" phone number using VoipMS do work, but our Asterisk server can't receive the audio from VoipMS, VoipMS can't receive audio from our Asterisk server, or both. (Note that this _doesn't_ fix audio transmission problems between _your phone_ and your Asterisk server ; the port forwarding (explained later) and some of the configuration in `pjsip.conf` fix that.)
 
 Still under the _Advanced tab_, also activate some of the codecs. If you're unsure which codecs to choose, only check _G.711U_ (which is the µ-law/ulaw/mulaw codec). The audio codecs are essentially the formats to use to send/receive the audio. In case you are interested, I found [this video tutorial on codecs useful when making this project](https://www.youtube.com/watch?v=O7feTItIs0s&list=PLnzEbgyK52Gu9fdVDHburrsG3KBIntXFK&index=37). **Don't forget to click "Apply All"!**
 
@@ -57,13 +57,13 @@ Still under the _Advanced tab_, also activate some of the codecs. If you're unsu
 
 #### SIP URI creation
 
-VoipMS requires us to "create" a URL that points to our server.  Once we'll configure our DID number, we'll have the option of selecting that URL as where to send calls to our Asterisk server. I guess another VoIP provider might allow you to specify the SIP URI when configuring the DID number ("phone number") rather than having to create it ahead of time.
+VoipMS requires us to "create" a URI that points to our server.  Once we'll configure our DID number ("phone number"), we'll have the option of selecting that URI as where to send calls to our Asterisk server. I guess other VoIP providers might allow you to specify the SIP URI as you configure the DID number, rather than having to create it ahead of time.
 
 To do this, go to SIP URIs as shown below.
 
 ![Where to find SIP URIs](my-data/README_img/SipUris.png "Where to find SIP URIs")
 
-Once there, click the _"Add SIP URI"_ button. Specify `voipms@<domain_name>:<port>`, where `<domain_name>` is your Asterisk server's domain name or IP address, and `<port>` is the UDP port number of Asterisk's SIP server. If you have no reason not to, use `5060` for `<port>` (or even don't specify `:<port>` at all, which is equivalent of adding `:5060`).
+Once there, click the _"Add SIP URI"_ button. Specify `voipms@<domain_name>:<port>`, where `<domain_name>` is your Asterisk server's domain name, subdomain name or IP address, and `<port>` is the UDP port number of Asterisk's SIP server. If you have no reason not to, use `5060` for `<port>` (or even don't specify `:<port>` at all, since port 5060 is the default). If you want a free subdomain name, go to https://www.noip.com/, get one for free and configure your router for Dynamic DNS using the domain name, username and password you provided. That's what I did :) . I'm sorry if it's confusing when I explain it, but that's how it works :) .
 
 Note that, as the screenshot below shows, I personally have two SIP URIs. You only really need one, though.
 
@@ -83,15 +83,13 @@ Once there, under _Routing_, choose _SIP URI_ and select the SIP URI you created
 
 ![Manage DID(s) > Edit DID > Choose SIP URI](my-data/README_img/ManageDids-EditDid-1.png "Manage DID(s) > Edit DID")
 
-Next, under _DID Point of Presence_, choose whichever region and server that is close to your location. This is the VoipMS server that will send calls to our Asterisk server. Note that the configuration file (explained later) will need the URL of that server, so, if you chose `montreal.voip.ms`, you will need to specify that later in the configuration file.
+Next, under _DID Point of Presence_, choose a region and server that is close to your location. This is the VoipMS server that will send calls to our Asterisk server. Note that the configuration file (explained later) will need the URL of that server, so, if you chose `montreal.voip.ms`, you will need to specify that later in the configuration file.
 
-Below this, also make sure that _"Ring time in seconds"_ is set to a fairly high value (I chose 60sec). This is the maximum amount of time the VoipMS server will leave callers ringing until hanging up. If this value is small, our phones will ring but our Asterisk server won't have the time to go to voicemail because the VoipMS server will hangup the call before we could go to voicemail.
+Below _DID Point of Presence_, also make sure that _"Ring time in seconds"_ is set to a fairly high value (I chose 60sec). This is the maximum amount of time the VoipMS server will leave callers ringing until hanging up. If this value is small, our phones will ring but our Asterisk server won't have the time to go to voicemail because the VoipMS server will hangup the call before we could go to voicemail.
 
 ![Manage DID(s) > Edit DID > Choose DID POP and ring time](my-data/README_img/ManageDids-EditDid-2.png "Manage DID(s) > Edit DID > Choose DID POP and ring time")
 
-Finally, to enable SMS messages, check the _"Enable SMS/MMS"_ box. Note that, at the time of writing this, SMS messages with VoipMS are free because it's apparently a new/experimental feature of VoipMS.
-
-Also choose your main account as _SMS SIP Account_. The _"SMS/MMS email address"_ is not necessary ; it only means you get an email at this address every time you receive an SMS message.
+Finally, to enable SMS messages, check the _"Enable SMS/MMS"_ box. Note that, at the time of writing this, SMS messages with VoipMS are free because it's apparently a new/experimental feature of VoipMS. Also choose your main account as _SMS SIP Account_. The _"SMS/MMS email address"_ is not necessary ; it only means VoipMS sends you an email at this email address every time you receive an SMS message.
 
 **Don't forget to click the button to apply changes!**
 
@@ -104,7 +102,7 @@ This project configures Asterisk to use SIP (for registering, starting calls, et
 - One UDP port for SIP signalling ; use UDP port 5060 if you have no reason not to.
 - About 100 UDP ports for RTP ; e.g. UDP 18000-18099.
 
-If you don't know how do the port forwarding, search something like _NAT port forwarding_ on the internet. Most home routers have a web interface that you can access from your browser by typing the routers IP address (e.g. `192.168.0.1` on some routers). You can do the port forwarding there. If you don't know the router's username/password, there usually is a reset button on the router to reset it back to factory settings and factory username/password.
+If you don't know what NAT port port forwarding is or how to do it, search something like _NAT port forwarding_ on the internet. Most home routers have a web interface that you can access from your browser by typing the routers IP address (e.g. `192.168.0.1` on some routers). You can do the port forwarding there. If you don't know the router's username/password, there usually is a reset button on the router to reset it back to factory settings and factory username/password.
 
 Notes:
 
@@ -131,6 +129,6 @@ To **erase** the current Asterisk configuration and use this repo's configuratio
 
 Notes:
 
-- You will need the `ffmpeg` program in your `PATH` if you specify in the config file formats other than WAV (e.g. `VOICEMAIL_FORMAT=wav|ulaw`). On Ubuntu 18.04, I installed `ffmpeg` with the command `sudo apt install ffmpeg`.
+- You will need the `ffmpeg` program in your `PATH` if you specify in the config file formats other than WAV (e.g. `SOUNDS_FORMATS=wav|ulaw`). On Ubuntu 18.04, I installed `ffmpeg` with the command `sudo apt install ffmpeg`.
 - Even though the `update.sh` script gives the impression that it can create a Docker container to run this project in, it's been a while that I tested it, so I'm not sure if it works.
-- The time range that Asterisk uses to go straight to voicemail past a certain time is the system's time, so make sure you have the correct timezone configured on your system. Run the `date` command to tell if that is the case. To change your server's timezone, use the server's GUI if you have a GUI installed, or run a command to do so. Under Ubuntu 18.04, I used `dpkg-reconfigure tzdata` to change my server's timezone.
+- The time range that Asterisk uses to go straight to voicemail past a certain time is the system's time, so make sure you have the correct timezone configured on your system. Run the `date` command to tell if that is the case. To change your server's timezone, use the server's GUI if you have a GUI installed, or run a command to do so. Under Ubuntu 18.04, I used the `dpkg-reconfigure tzdata` command to change my server's timezone.
