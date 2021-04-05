@@ -58,6 +58,7 @@ export class SmsFile {
             deviceStringsMatches.forEach(ds => dsNoDuplicates.add(ds));
             const receivedByArray: Device[] = [];
             dsNoDuplicates.forEach(ds => receivedByArray.push(new Device(ds)));
+            console.log("Receivedby array:", JSON.stringify(receivedByArray), "with deviceStringMatches:", receivedByString);
             return receivedByArray;
         }
         else {

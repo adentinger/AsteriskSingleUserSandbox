@@ -30,6 +30,15 @@ export class PendingSmsMessages {
      */
     public updateSmsStatus(sms: SmsFile): void {
         this.scheduleSmsReception(sms);
+        console.log("------------------------\nupdateSmsStatus done.\npendingByDevice is now: ");
+        this.pendingByDevice.forEach((pbd, dev) => {
+            console.log(dev + ": ");
+            pbd.forEach(absp => console.log(absp, ", "));
+        });
+        console.log("--------\npendingByFilename:");
+        this.pendingByFilename.forEach((smsfile, filename) => {
+            console.log(filename, " caller:", smsfile.caller, " to:", smsfile.extenTo);
+        });
     }
 
     /**
@@ -46,6 +55,11 @@ export class PendingSmsMessages {
             const dateB = b.date;
             return dateA.getTime() - dateB.getTime();
         });
+        console.log(
+            "Somebody called getNotReceivedBy for device",
+                device.getDeviceString(),
+                ". Result: [", notReceivedList.map(nrl => nrl.abspath).join(", "), "]"
+        );
         return notReceivedList;
     }
 
@@ -78,6 +92,8 @@ export class PendingSmsMessages {
             else {
                 console.log("Updated SMS", sms.abspath, "not received by all. Keeping.");
             }
+            sms.receivedBy.forEach(device => console.log("Received by", device.getDeviceString()));
+            sms.getNotReceivedBy().forEach(device => console.log("Not received by", device.getDeviceString()));
             this.pendingByFilename.set(sms.abspath, sms);
             sms.getNotReceivedBy().forEach(device => {
                 // Create the SmsFile set for this device if it does not exist.

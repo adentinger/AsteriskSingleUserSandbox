@@ -10,15 +10,25 @@ import { Util } from "./Util";
 
 export class AmiEventHandler {
 
-    public static readonly TRANSMISSION_DELAY_MS = 2000;
+    public static readonly TRANSMISSION_DELAY_MS = 1000;
 
     protected readonly deviceStates: Map<string, DeviceState> = new Map();
     protected readonly pendingMessages: PendingSmsMessages;
     protected messageSender!: AmiMessageSendAction;
     protected isAmiInstanceSet: boolean = false;
+    protected isMessageSendingCanceled: boolean = false;
+    protected cancelAsserter: () => void;
+    protected messageSendingDone: Promise<void>;
 
     public constructor() {
         this.pendingMessages = new PendingSmsMessages();
+        this.cancelAsserter = () => {
+            if (this.isMessageSendingCanceled) {
+                this.isMessageSendingCanceled = false;
+                throw new CanceledError();
+            }
+        };
+        this.messageSendingDone = Promise.resolve();
     }
 
     public setAmiInstance(ami: ManagerInstance): void {
@@ -55,7 +65,7 @@ export class AmiEventHandler {
 
         console.log(`Device ${e.state.getAmiDeviceString()} is connected (${e.state.value})`);
         const pendingSmsForDevice = this.pendingMessages.getNotReceivedBy(e.state.device);
-        this.sendMessages(e.state.device, pendingSmsForDevice);
+        this.sendMessages(e.state.device, pendingSmsForDevice, this.cancelAsserter);
     }
 
     protected onDisconnect(e: DeviceStateChangeEvent) {
@@ -67,9 +77,12 @@ export class AmiEventHandler {
      * to be correctly received before sending the next.
      * @param to The device to send the SMS to.
      * @param messages The list of messages to send.
+     * @param assertNotCanceled A closure that throws a CanceledError when we
+     * need to stop sending messages early.
      */
-    protected async sendMessages(to: Device, messages: SmsFile[]): Promise<void> {
+    protected async sendMessages(to: Device, messages: SmsFile[], assertNotCanceled: () => void): Promise<void> {
         for (let i = 0; i < messages.length; ++i) {
+            assertNotCanceled();
             const sms = messages[i];
             console.log(
                 "Sending", sms.abspath, "to", to.getDeviceString(), "; body:", sms.body,
@@ -77,11 +90,15 @@ export class AmiEventHandler {
             );
             // This throws an error if the message was not received correctly.
             await this.messageSender.messageSend(to, sms);
+            assertNotCanceled();
 
-            // Wait a moment before sending the next message ; some
-            // clients (e.g. Zoiper :S) do not seem to handle receiving
-            // text messsages rapidly very well.
-            await Util.delay(AmiEventHandler.TRANSMISSION_DELAY_MS);
+            const isLastMessage = i === (messages.length - 1);
+            if (!isLastMessage) {
+                // Wait a moment before sending the next message ; some
+                // clients (e.g. Zoiper :S) do not seem to handle receiving
+                // text messsages rapidly very well.
+                await Util.delay(AmiEventHandler.TRANSMISSION_DELAY_MS);
+            }
 
             const receivedBy = sms.receivedBy;
             receivedBy.push(to);
