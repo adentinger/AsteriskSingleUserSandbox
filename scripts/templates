@@ -7,7 +7,7 @@ declare TEMPLATE_VARS=(
     CALLER_NAME
     DEVICE_LIST
     DIAL_TIME_SEC
-    DID_NUMBER
+    DID_NUMBERS
     DOMAIN_NAME
     ENDPOINT1_PASSWORD
     ENDPOINT2_PASSWORD
@@ -40,7 +40,7 @@ declare -A TEMPLATE_VARS_AND_DESC=(
     [CALLER_NAME]='Caller name to use when performing an external call. Example: "John Doe"'
     [DEVICE_LIST]='Comma-separated list of devices to dial when dialling the main extension. This MUST correspond to the list of AORs in pjsip.conf, so, unless you change anything there, use: "PJSIP/linux,PJSIP/home-phone,PJSIP/tablet,PJSIP/cell-phone,PJSIP/work-computer1"'
     [DIAL_TIME_SEC]='Number of seconds to ring before going to voicemail. Example: "15"'
-    [DID_NUMBER]='VoipMS DID number ("phone number") to dial as when performing an external call/sending SMS messages. Example: "1234567890"'
+    [DID_NUMBERS]='Comma-separated list of VoipMS DID numbers ("phone numbers") in our VoipMS account. The first one is the one SMS messages will be sent with. Example: "5149990000,4381112222,2633334444"'
     [DOMAIN_NAME]='Domain/subdomain/IP address of the Asterisk server. If you want a free subdomain name, go to https://www.noip.com/ and configure your router for Dynamic DNS using the domain name, username and password you provided. That'"'"'s why I use. Example: "mysubdomain.ddns.net"'
     [ENDPOINT1_PASSWORD]='Password of PJSIP/linux         . Example: "iloveasterisk"'
     [ENDPOINT2_PASSWORD]='Password of PJSIP/home-phone    . Example: "iloveasterisk"'
@@ -48,7 +48,7 @@ declare -A TEMPLATE_VARS_AND_DESC=(
     [ENDPOINT4_PASSWORD]='Password of PJSIP/tablet        . Example: "iloveasterisk"'
     [ENDPOINT5_PASSWORD]='Password of PJSIP/cell-phone    . Example: "iloveasterisk"'
     [ENDPOINT_QUALIFY_FREQUENCY]='How often to send a SIP OPTIONS packet to connected endpoints. Used to keep the NAT open in case the endpoint is behind a NAT. Example: "15"'
-    [MAIN_EXTEN]='Main extension used in the dialplan. This is normally only made up of digits (0-9). Your endpoints will be reachable at this extension ; your VoicemailMain (checking your voicemail messages) will be at *${MAIN_EXTEN}, and, if you ever want to transfer somebody to leave you a voicemail message, the extension number to leave a message is **${MAIN_EXTEN}.'
+    [MAIN_EXTEN]='Main extension used in the dialplan. This is normally only made up of digits (0-9). Your endpoints will be reachable at this extension ; your VoicemailMain (checking your voicemail messages) will be at *${MAIN_EXTEN}, and, if you ever want to transfer somebody to leave you a voicemail message after you'"'"'ve answered, transfer them to extention **${MAIN_EXTEN}.'
     [MANAGER_PASSWORD]='Password of the AMI manager. Example: "helovesasterisk"'
     [MANAGER_USERNAME]='Username of the AMI manager. Example: "mngr"'
     [PJSIP_PORT]='UDP port of asterisk for SIP. Use "5060" if you have no reason not to.'
