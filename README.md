@@ -7,6 +7,7 @@ I wanted to learn Asterisk, to be able to "take my homeline with me anywhere" (i
 **Key features:**
 
 - Readymade asterisk config ; only setup your VoipMS account, forward the NAT ports, create the config file and run one command. All steps are explained below.
+- Supports multiple DIDs ("phone numbers") for outbound calls. If the configuration uses mutiple DIDs, then on each outbound call the caller is asked to choose the DID to call with.
 - Currently (at the time of writing this) working asterisk features: voicemail, voicemail MWI (blinking light on phone/softphone when there is an unread voicemail message), music on hold, SMS (via _SIP MESSAGE_ though, not _SIP SIMPLE_ ; my VoIP provider doesn't use _SIP SIMPLE_!), go straight to voicemail past a certain time, ...
 - Some comments explain why things are done the way they are. This way you can use this project to learn the basics of VoIP with Asterisk like I did.
 - (Experimental) An Asterisk Manager Interface (AMI) client. While some endpoints (e.g. a cell phone) are not registered, this client buffers the SMS messages. It sends the missed messages to them once the enpoints register to Asterisk. This client is a systemd unit for robustness.

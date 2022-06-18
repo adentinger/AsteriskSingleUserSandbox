@@ -205,25 +205,27 @@ installWavSoundFiles() {
     local wavFiles=($(find "${src}" -type f -name '*.wav' -print))
     local IFS="${oldIfs}"
     for wavFile in "${wavFiles[@]}"; do
+        local relDst="${dst}/$(dirname "$(realpath --relative-to="${src}" "${wavFile}")")"
+        mkdir -p "${relDst}"
         # Remove existing sound files so we don't leave any sound file of a
         # certain format when we remove it.
-        find "${dst}" -type f -name "$(basename "${wavFile}" .wav)*" -delete
+        find "${relDst}" -type f -name "$(basename "${wavFile}" .wav)*" -delete
         for format in "${formats[@]}"; do
             case "${format}" in
             wav)
-                cp "${wavFile}" "${dst}"
+                cp "${wavFile}" "${relDst}"
                 ;;
 
             gsm)
-                wavToGsm "${wavFile}" "${dst}"
+                wavToGsm "${wavFile}" "${relDst}"
                 ;;
 
             ulaw)
-                wavToUlaw "${wavFile}" "${dst}"
+                wavToUlaw "${wavFile}" "${relDst}"
                 ;;
 
             alaw)
-                wavToAlaw "${wavFile}" "${dst}"
+                wavToAlaw "${wavFile}" "${relDst}"
                 ;;
 
             *)
