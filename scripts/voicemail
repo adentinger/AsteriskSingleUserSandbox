@@ -1,0 +1,16 @@
+#!/bin/bash -e
+
+updateVoicemail() {
+    message 'Updating voicemail.'
+    updateVoicemailSoundFiles
+}
+
+updateVoicemailSoundFiles() {
+    # Delete greeting and unavailable messages in all formats.
+    find "$(voicemailSoundsInstallDir)" -maxdepth 1 -type f '(' -name 'unavail.*' -o -name 'greet.*' ')'
+
+    # Put unavailable message instead (which has length 0.00s).
+    installDirectoryContents "${VOICEMAIL_SOUNDS_DIR}" "$(voicemailSoundsInstallDir)"
+    chmod -R 750 "$(voicemailSoundsInstallDir)"
+    chown asterisk:asterisk "$(voicemailSoundsInstallDir)"
+}

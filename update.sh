@@ -14,6 +14,8 @@ source "${SCRIPTS_DIR}/container"
 source "${SCRIPTS_DIR}/moh"
 source "${SCRIPTS_DIR}/systemd"
 source "${SCRIPTS_DIR}/templates"
+source "${SCRIPTS_DIR}/datadir"
+source "${SCRIPTS_DIR}/voicemail"
 
 usage() {
     echo "USAGE" >&2
@@ -187,6 +189,8 @@ install() {
     parseVariableConfigFile
     updateAsteriskConfig
     updateMusicOnHold
+    updateVoicemail
+    updateDatadir
     updateAmiClient
 }
 
